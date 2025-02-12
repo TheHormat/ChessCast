@@ -1,1 +1,1 @@
-worker: python -m core/bot
+worker: cd /app && python -m core.bot
