@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "chesscast"
+version = "0.1.0"
+description = "Chess Telegram Bot"
+authors = ["TheHormat <thehormat@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-telegram-bot = "^21.10"
+schedule = "^1.2.2"
+nest-asyncio = "^1.6.0"
+python-dotenv = "^1.0.1"
+openai = "^1.61.1"
+requests = "^2.32.3"
+pymongo = "^4.11"
+dnspython = "^2.7.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.32.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

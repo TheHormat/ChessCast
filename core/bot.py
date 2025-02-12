@@ -1,0 +1,577 @@
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Bot
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackContext,
+    CallbackQueryHandler,
+)
+from core.static_facts import CHESS_FACTS
+import schedule
+import asyncio
+import nest_asyncio
+import os
+import random
+from dotenv import load_dotenv
+from core.languages import MESSAGES
+from core.database import (
+    db,
+    add_user,
+    get_top_players,
+    get_user_language,
+    is_user_registered,
+    remove_user,
+    update_user_rating_from_api,
+)
+from api.chess_com_api import (
+    get_chess_com_profile,
+    get_chess_com_rating,
+    get_chess_com_stats,
+)
+from api.lichess_api import (
+    filter_tournaments_by_rating,
+    get_lichess_daily_puzzle,
+    get_lichess_tournaments,
+    get_lichess_profile,
+    get_lichess_rating,
+)
+from api.gpt_api import get_chess_fact
+from api.unsplash_api import get_chess_image
+from core.scheduler import schedule_random_times, schedule_task
+
+
+load_dotenv()
+
+# ✅ Take away API Openers
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# ✅ Define Botu
+bot = Bot(token=BOT_TOKEN)
+
+# ✅ For asynchronous functions
+nest_asyncio.apply()
+
+
+async def set_language_command(update: Update, context: CallbackContext) -> None:
+    """
+    Sends an inline keyboard to the user to select a language.
+    """
+    user_id = update.effective_chat.id
+    user_lang = db.users.find_one({"user_id": user_id}, {"language": 1, "_id": 0})
+    user_lang = user_lang["language"] if user_lang and "language" in user_lang else "en"
+
+    keyboard = [
+        [
+            InlineKeyboardButton("🇦🇿 Azərbaycan", callback_data="set_lang_az"),
+            InlineKeyboardButton("🇬🇧 English", callback_data="set_lang_en"),
+        ],
+        [
+            InlineKeyboardButton("🇷🇺 Русский", callback_data="set_lang_ru"),
+            InlineKeyboardButton("🇹🇷 Türkçe", callback_data="set_lang_tr"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # Language selection message based on the user's current language
+    if user_lang == "en":
+        message_text = "🌍 *Please select your language:*"
+    elif user_lang == "az":
+        message_text = "🌍 *Zəhmət olmasa, dil seçin:*"
+    elif user_lang == "ru":
+        message_text = "🌍 *Пожалуйста, выберите ваш язык:*"
+    else:  # Default to Turkish
+        message_text = "🌍 *Lütfen dilinizi seçin:*"
+
+    await update.message.reply_text(
+        message_text,
+        reply_markup=reply_markup,
+        parse_mode="Markdown",
+    )
+
+
+async def language_callback(update: Update, context: CallbackContext) -> None:
+    """
+    Handles the user's language selection from the inline keyboard.
+    """
+    query = update.callback_query
+    user_id = query.from_user.id
+    selected_lang = query.data
+
+    # Determine the new language
+    if selected_lang == "set_lang_az":
+        new_lang = "az"
+    elif selected_lang == "set_lang_en":
+        new_lang = "en"
+    elif selected_lang == "set_lang_ru":
+        new_lang = "ru"
+    elif selected_lang == "set_lang_tr":
+        new_lang = "tr"
+    else:
+        return
+
+    # Update the user's language preference in the database
+    db.users.update_one(
+        {"user_id": user_id}, {"$set": {"language": new_lang}}, upsert=True
+    )
+
+    # Confirm language change in the selected language
+    confirmation_message = MESSAGES[new_lang]["language_set"]
+
+    await query.answer()
+    await query.edit_message_text(confirmation_message)
+
+    print(f"✅ User {user_id} changed language to {new_lang}")
+
+
+# ✅ `/start` command: Registers the user and sends a static welcome message + random chess information
+async def start(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    # ✅ If the user is logging in for the first time, register and send static facts
+    if not is_user_registered(user_id):
+        add_user(user_id)
+        await update.message.reply_text(MESSAGES[user_lang]["start_welcome"])
+
+        # ✅ Send random information from CHESS_FACTS for new user
+        fact_list = CHESS_FACTS.get(user_lang, CHESS_FACTS["en"])  # Default English
+        fact = random.choice(fact_list)
+        await update.message.reply_text(fact, parse_mode="Markdown")
+    else:
+        await update.message.reply_text(MESSAGES[user_lang]["start_already_registered"])
+
+
+async def about_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    about_text = MESSAGES[user_lang]["about"]
+
+    await update.message.reply_text(
+        about_text, parse_mode="Markdown", disable_web_page_preview=True
+    )
+
+
+async def lichess_arena_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    user_input = context.args
+
+    if user_input and not user_input[0].isdigit():
+        await update.message.reply_text(
+            MESSAGES[user_lang]["lichess_arena_error"],
+            parse_mode="Markdown",
+        )
+        return
+
+    user_rating = int(user_input[0]) if user_input else None
+
+    tournaments = get_lichess_tournaments()
+    if not tournaments:
+        await update.message.reply_text(MESSAGES[user_lang]["lichess_arena_no_data"])
+        return
+
+    message = filter_tournaments_by_rating(tournaments, user_rating, user_lang)
+
+    await update.message.reply_text(
+        message, parse_mode="Markdown", disable_web_page_preview=True
+    )
+
+
+async def lichess_profile_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    if not context.args:
+        await update.message.reply_text(
+            MESSAGES[user_lang]["lichess_profile_usage"], parse_mode="Markdown"
+        )
+        return
+
+    username = context.args[0]
+    profile = get_lichess_profile(username)
+
+    if not profile:
+        await update.message.reply_text(
+            MESSAGES[user_lang]["lichess_profile_not_found"].format(username),
+            parse_mode="Markdown",
+        )
+        return
+
+    rating_blitz = profile.get("perfs", {}).get("blitz", {}).get("rating", "Unknown")
+    rating_bullet = profile.get("perfs", {}).get("bullet", {}).get("rating", "Unknown")
+    rating_rapid = profile.get("perfs", {}).get("rapid", {}).get("rating", "Unknown")
+
+    games_played = profile.get("count", {}).get("all", "Unknown")
+    games_won = profile.get("count", {}).get("win", 0)
+    games_lost = profile.get("count", {}).get("loss", 0)
+    games_drawn = profile.get("count", {}).get("draw", 0)
+
+    win_percentage = (
+        round((games_won / games_played) * 100, 2)
+        if isinstance(games_played, int) and games_played > 0
+        else "Unknown"
+    )
+
+    message = (
+        MESSAGES[user_lang]["lichess_profile_header"].format(username)
+        + MESSAGES[user_lang]["rating_bullet"].format(rating_bullet)
+        + "\n"
+        + MESSAGES[user_lang]["rating_blitz"].format(rating_blitz)
+        + "\n"
+        + MESSAGES[user_lang]["rating_rapid"].format(rating_rapid)
+        + "\n\n"
+        + MESSAGES[user_lang]["total_games"].format(games_played)
+        + "\n\n"
+        + MESSAGES[user_lang]["games_won"].format(games_won, win_percentage)
+        + "\n\n"
+        + MESSAGES[user_lang]["games_lost"].format(games_lost)
+        + "\n\n"
+        + MESSAGES[user_lang]["games_drawn"].format(games_drawn)
+        + "\n\n"
+        + MESSAGES[user_lang]["view_profile"].format(
+            f"https://lichess.org/@/{username}"
+        )
+    )
+
+    await update.message.reply_text(
+        message, parse_mode="Markdown", disable_web_page_preview=True
+    )
+
+
+# Chess.com
+async def chess_com_profile_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    if not context.args:
+        await update.message.reply_text(
+            MESSAGES[user_lang]["chess_profile_usage"], parse_mode="Markdown"
+        )
+        return
+
+    username = context.args[0]
+    profile = get_chess_com_profile(username)
+
+    if not profile:
+        await update.message.reply_text(
+            MESSAGES[user_lang]["chess_profile_not_found"].format(username),
+            parse_mode="Markdown",
+        )
+        return
+
+    stats = get_chess_com_stats(username)
+    game_modes = ["chess_blitz", "chess_bullet", "chess_rapid", "chess_daily"]
+
+    total_games = 0
+    total_wins = 0
+    total_losses = 0
+    total_draws = 0
+    ratings = {}
+
+    for mode in game_modes:
+        mode_data = stats.get(mode, {})
+        ratings[mode] = mode_data.get("last", {}).get("rating", "Unknown")
+        record = mode_data.get("record", {})
+        total_wins += record.get("win", 0)
+        total_losses += record.get("loss", 0)
+        total_draws += record.get("draw", 0)
+
+    total_games = total_wins + total_losses + total_draws
+    win_percentage = (
+        round((total_wins / total_games) * 100, 2) if total_games > 0 else "Unknown"
+    )
+
+    profile_picture = profile.get("avatar", None)
+
+    message = (
+        MESSAGES[user_lang]["chess_profile_header"].format(username)
+        + MESSAGES[user_lang]["rating_bullet"].format(ratings["chess_bullet"])
+        + "\n"
+        + MESSAGES[user_lang]["rating_blitz"].format(ratings["chess_blitz"])
+        + "\n"
+        + MESSAGES[user_lang]["rating_rapid"].format(ratings["chess_rapid"])
+        + "\n"
+        + MESSAGES[user_lang]["rating_daily"].format(ratings["chess_daily"])
+        + "\n\n"
+        + MESSAGES[user_lang]["total_games"].format(total_games)
+        + "\n\n"
+        + MESSAGES[user_lang]["games_won"].format(total_wins, win_percentage)
+        + "\n\n"
+        + MESSAGES[user_lang]["games_lost"].format(total_losses)
+        + "\n\n"
+        + MESSAGES[user_lang]["games_drawn"].format(total_draws)
+        + "\n\n"
+        + MESSAGES[user_lang]["view_profile"].format(
+            f"https://www.chess.com/member/{username}"
+        )
+    )
+
+    if profile_picture:
+        await update.message.reply_photo(
+            photo=profile_picture, caption=message, parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            message, parse_mode="Markdown", disable_web_page_preview=True
+        )
+
+
+async def donate_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    await update.message.reply_text(
+        MESSAGES[user_lang]["donate_message"],
+        parse_mode="Markdown",
+        disable_web_page_preview=True,
+    )
+
+
+async def set_rating_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)  # We get the user's language.
+
+    if not context.args:
+        await update.message.reply_text(
+            MESSAGES[user_lang]["set_rating_usage"], parse_mode="Markdown"
+        )
+        return
+
+    username = context.args[0]
+
+    # ✅ Let's get the rating from Lichess and Chess.com
+    lichess_rating = get_lichess_rating(username)
+    chesscom_rating = get_chess_com_rating(username)
+
+    if lichess_rating is None and chesscom_rating is None:
+        await update.message.reply_text(
+            MESSAGES[user_lang]["set_rating_not_found"].format(username=username),
+            parse_mode="Markdown",
+        )
+        return
+
+    # ✅ Note which platform has the highest rating.
+    max_rating = max(filter(None, [lichess_rating, chesscom_rating]))
+
+    db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"user_rating": max_rating, "chess_username": username}},
+        upsert=True,
+    )
+
+    await update.message.reply_text(
+        MESSAGES[user_lang]["set_rating_success"].format(
+            username=username, rating=max_rating
+        ),
+        parse_mode="Markdown",
+    )
+
+
+async def topplayers_command(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    top_players = get_top_players(limit=10)
+
+    if not top_players:
+        await update.message.reply_text(MESSAGES[user_lang]["topplayers_no_data"])
+        return
+
+    message = MESSAGES[user_lang]["topplayers_header"] + "\n\n"
+
+    for index, player in enumerate(top_players, start=1):
+        user_id = player["user_id"]
+
+        # ✅ Get and update the rating from the API every time
+        updated_rating = update_user_rating_from_api(user_id)
+
+        username = player.get("chess_username", "None")
+        rating = updated_rating if updated_rating else player.get("user_rating", "None")
+
+        message += f"{index}. **{username}** - {rating} Elo\n"
+
+    await update.message.reply_text(message, parse_mode="Markdown")
+
+
+async def unsubscribe(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)
+
+    if is_user_registered(user_id):
+        remove_user(user_id)
+        await update.message.reply_text(MESSAGES[user_lang]["unsubscribe_success"])
+    else:
+        await update.message.reply_text(MESSAGES[user_lang]["unsubscribe_already"])
+
+
+async def puzzle_command(update: Update, context: CallbackContext) -> None:
+    """
+    Sends the daily chess puzzle to the user.
+    """
+    print("🔍 /puzzle command called.")
+
+    user_id = update.effective_chat.id
+    user_lang = get_user_language(user_id)  # ✅ Check the user's language
+
+    puzzle = get_lichess_daily_puzzle()
+
+    if not puzzle:
+        print("⚠️ Lichess API did not respond.")
+        await update.message.reply_text(MESSAGES[user_lang]["puzzle_error"])
+        return
+
+    print(f"✅ Puzzle found: {puzzle['id']}")
+
+    message = MESSAGES[user_lang]["puzzle_message"].format(
+        url=puzzle["url"], rating=puzzle["rating"], plays=puzzle["plays"]
+    )
+
+    await update.message.reply_text(
+        message, parse_mode="Markdown", disable_web_page_preview=True
+    )
+
+
+async def send_daily_puzzle():
+    """
+    Sends the daily puzzle to all users every day.
+    """
+    users = db.users.find({}, {"user_id": 1, "_id": 0})
+    users = [user["user_id"] for user in users]
+
+    if not users:
+        print("⚠️ No users found.")
+        return
+
+    puzzle = get_lichess_daily_puzzle()
+    if not puzzle:
+        print("⚠️ Could not retrieve the daily puzzle.")
+        return
+
+    message_az = MESSAGES["az"]["puzzle_message"].format(
+        url=puzzle["url"], rating=puzzle["rating"], plays=puzzle["plays"]
+    )
+    message_en = MESSAGES["en"]["puzzle_message"].format(
+        url=puzzle["url"], rating=puzzle["rating"], plays=puzzle["plays"]
+    )
+
+    for user_id in users:
+        try:
+            user_lang = get_user_language(user_id)  # ✅ Check each user's language
+            message = message_az if user_lang == "az" else message_en
+            await bot.send_message(
+                chat_id=user_id,
+                text=message,
+                parse_mode="Markdown",
+                disable_web_page_preview=True,
+            )
+            print(f"✅ Daily puzzle sent: {user_id}")
+        except Exception as e:
+            print(f"❌ Failed to send message ({user_id}): {e}")
+
+
+async def send_daily_chess_images():
+    """
+    Sends 5 desktop and 5 mobile chess images to all users every day.
+    """
+    users = db.users.find({}, {"user_id": 1, "_id": 0})
+    users = [user["user_id"] for user in users]
+
+    if not users:
+        print("⚠️ No users found.")
+        return
+
+    desktop_images = [get_chess_image("landscape") for _ in range(5)]
+    mobile_images = [get_chess_image("portrait") for _ in range(5)]
+
+    all_images = desktop_images + mobile_images  # ✅ 10 images
+
+    for image_url in all_images:
+        if not image_url:
+            print("⚠️ No image found, continuing...")
+            continue
+
+        for user_id in users:
+            try:
+                user_lang = get_user_language(user_id)  # ✅ Check each user's language
+                message = MESSAGES[user_lang]["daily_chess_images"]
+                await bot.send_photo(chat_id=user_id, photo=image_url, caption=message)
+                print(f"✅ Image sent: {user_id}")
+            except Exception as e:
+                print(f"❌ Failed to send message ({user_id}): {e}")
+
+
+# ✅ Function to send a message from GPT-4 to all users
+async def send_chess_fact():
+    users = db.users.find(
+        {}, {"user_id": 1, "_id": 0}
+    )  # Retrieve all users from MongoDB
+    users = [user["user_id"] for user in users]
+
+    if not users:
+        print("⚠️ No users found.")
+        return
+
+    for user_id in users:
+        try:
+            # ✅ Get the user's language and send an appropriate request to GPT
+            fact = await get_chess_fact(user_id)
+
+            # ✅ Send the message
+            await bot.send_message(chat_id=user_id, text=fact, parse_mode="Markdown")
+            print(f"✅ Message sent: {user_id}")
+        except Exception as e:
+            print(f"❌ Failed to send message ({user_id}): {e}")
+
+
+# ✅ Secure messaging function for users
+async def send_message(user_id, text):
+    try:
+        await bot.send_message(chat_id=user_id, text=text, parse_mode="Markdown")
+    except Exception as e:
+        print(f"Message could not be sent: ({user_id}): {e}")
+
+
+# ✅ Starting the bot
+async def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    # ✅ Define commands
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("language", set_language_command))
+    app.add_handler(CommandHandler("about", about_command))
+    app.add_handler(CommandHandler("puzzle", puzzle_command))
+    app.add_handler(CommandHandler("setrating", set_rating_command))
+    app.add_handler(CommandHandler("topplayers", topplayers_command))
+    app.add_handler(CommandHandler("lichessarena", lichess_arena_command))
+    app.add_handler(CommandHandler("lichessprofile", lichess_profile_command))
+    app.add_handler(CommandHandler("chessprofile", chess_com_profile_command))
+    app.add_handler(CommandHandler("donate", donate_command))
+    app.add_handler(CommandHandler("unsubscribe", unsubscribe))
+    app.add_handler(CallbackQueryHandler(language_callback, pattern="^set_lang_"))
+
+    # ✅ Initially schedule random hours
+    schedule_random_times()  # Set random chess fact times
+    schedule.every().day.at("11:00").do(
+        lambda: asyncio.create_task(send_daily_puzzle())
+    )
+    schedule.every().day.at("20:30").do(
+        lambda: asyncio.create_task(send_daily_chess_images())
+    )
+
+    # ✅ Run the scheduler loop
+    asyncio.create_task(schedule_task())
+
+    print("Bot working... 🚀")
+    await app.run_polling()
+
+
+# ✅ Start Bot
+if __name__ == "__main__":
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(main())
