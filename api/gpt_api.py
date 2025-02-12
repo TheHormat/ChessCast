@@ -9,6 +9,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # ✅ OpenAI müştərisini yaradaraq API açarını təyin edirik
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
+
 async def get_chess_fact(user_id):
     try:
         print("📡 Sending a request to the GPT API...")

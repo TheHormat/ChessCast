@@ -30,7 +30,7 @@ def schedule_random_times():
     """
     from core.bot import (
         send_chess_fact,
-    )  
+    )
 
     first_time, second_time = get_random_times()
     print(f"📅 Random schedule set for today: {first_time}, {second_time}")

@@ -51,13 +51,29 @@ bot = Bot(token=BOT_TOKEN)
 nest_asyncio.apply()
 
 
+def get_user_data(user_id, fields=None):
+    """
+    Retrieves user data from the database.
+    :param user_id: Telegram user ID
+    :param fields: List of fields to retrieve, default is None (all fields)
+    :return: Dictionary with user data or None if user does not exist
+    """
+    query_fields = {field: 1 for field in fields} if fields else {}
+    return db.users.find_one({"user_id": user_id}, query_fields)
+
+
+def get_message(user_id, key):
+    user_lang = get_user_language(user_id)
+    return MESSAGES.get(user_lang, MESSAGES["en"]).get(key, "Message not found")
+
+
 async def set_language_command(update: Update, context: CallbackContext) -> None:
     """
     Sends an inline keyboard to the user to select a language.
     """
     user_id = update.effective_chat.id
-    user_lang = db.users.find_one({"user_id": user_id}, {"language": 1, "_id": 0})
-    user_lang = user_lang["language"] if user_lang and "language" in user_lang else "en"
+    user_data = get_user_data(user_id, ["language"])
+    user_lang = user_data.get("language", "en")
 
     keyboard = [
         [
@@ -78,7 +94,7 @@ async def set_language_command(update: Update, context: CallbackContext) -> None
         message_text = "🌍 *Zəhmət olmasa, dil seçin:*"
     elif user_lang == "ru":
         message_text = "🌍 *Пожалуйста, выберите ваш язык:*"
-    else:  # Default to Turkish
+    else:
         message_text = "🌍 *Lütfen dilinizi seçin:*"
 
     await update.message.reply_text(
@@ -86,6 +102,16 @@ async def set_language_command(update: Update, context: CallbackContext) -> None
         reply_markup=reply_markup,
         parse_mode="Markdown",
     )
+
+
+def get_language_from_callback(data):
+    lang_map = {
+        "set_lang_az": "az",
+        "set_lang_en": "en",
+        "set_lang_ru": "ru",
+        "set_lang_tr": "tr",
+    }
+    return lang_map.get(data)
 
 
 async def language_callback(update: Update, context: CallbackContext) -> None:
@@ -96,16 +122,8 @@ async def language_callback(update: Update, context: CallbackContext) -> None:
     user_id = query.from_user.id
     selected_lang = query.data
 
-    # Determine the new language
-    if selected_lang == "set_lang_az":
-        new_lang = "az"
-    elif selected_lang == "set_lang_en":
-        new_lang = "en"
-    elif selected_lang == "set_lang_ru":
-        new_lang = "ru"
-    elif selected_lang == "set_lang_tr":
-        new_lang = "tr"
-    else:
+    new_lang = get_language_from_callback(selected_lang)
+    if not new_lang:
         return
 
     # Update the user's language preference in the database
@@ -387,7 +405,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         updated_rating = update_user_rating_from_api(user_id)
 
         username = player.get("chess_username", "None")
-        rating = updated_rating if updated_rating else player.get("user_rating", "None")
+        rating = updated_rating or player.get("user_rating", "None")
 
         message += f"{index}. **{username}** - {rating} Elo\n"
 
