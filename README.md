@@ -49,13 +49,13 @@ Getting started is simple! Just click below and send `/start` to activate the bo
 ## 🎨 **Preview of ChessCast in Action!**
 
 📸 *Daily Chess Fact:*
-![Chess Fact Example](https://your-image-url.com/example1.png)
+![Chess Fact Example](https://i.ibb.co/YB9Sk9dX/Screenshot-2025-02-12-at-11-53-48-PM.png)
 
-🧩 *Daily Puzzle Challenge:*
-![Chess Puzzle Example](https://your-image-url.com/example2.png)
+🧩 *Daily Chess Images:*
+![Chess Images Example](https://i.ibb.co/67s1MMwq/Screenshot-2025-02-12-at-11-53-37-PM.png)
 
 📊 *Lichess & Chess.com Profile Check:*
-![Profile Example](https://your-image-url.com/example3.png)
+![Profile Example](https://i.ibb.co/4nNgCvRr/Screenshot-2025-02-12-at-11-54-22-PM.png)
 
 ---
 
@@ -87,7 +87,7 @@ ChessCast Bot is built using:
 - **GPT4-turbo APIs** – Send chess fact
 - **Unsplash APIs** – Send chess images
 - **Lichess.org & Chess.com APIs** – Chess data integration
-- **Railway** – Deployment 
+- **Railway** – Deployment
 
 ### 📌 **Want to Contribute?**
 If you're a developer and want to contribute, feel free to fork the repo and submit a PR!
