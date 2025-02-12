@@ -2,17 +2,28 @@ import os
 import openai
 from core.database import get_user_language
 from core.languages import GPT_PROMPTS
+import logging
 
-# ✅ OpenAI API açarını yükləyirik
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler(),
+    ],
+)
+
+logger = logging.getLogger(__name__)
+
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-# ✅ OpenAI müştərisini yaradaraq API açarını təyin edirik
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 
 async def get_chess_fact(user_id):
     try:
-        print("📡 Sending a request to the GPT API...")
+        logger.info("📡 Sending a request to the GPT API...")
 
         # ✅ Get user's language from MongoDB
         user_lang = get_user_language(user_id)
@@ -30,5 +41,5 @@ async def get_chess_fact(user_id):
         return response.choices[0].message.content
 
     except Exception as e:
-        print(f"❌ GPT API Error: {e}")
+        logger.info(f"❌ GPT API Error: {e}")
         return "⚠️ Could not connect to GPT API. Please check again later!"

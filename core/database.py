@@ -6,108 +6,112 @@ import os
 from api.chess_com_api import get_chess_com_rating
 from api.lichess_api import get_lichess_rating
 
+# ✅ Load environment variables
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise ValueError("MONGO_URI is not set in the environment variables.")
+
 client = MongoClient(MONGO_URI)
-
-# ✅ Define Database and Collection
-db = client["chesscast"]  # ChessCast DB
-users_collection = db["users"]  # Collection for users
+db = client["chesscast"]
 
 
-def add_user(user_id):
+def get_user_collection():
+    return db["users"]
+
+
+# ✅ Add a new user to the database
+def add_user(user_id, language="en"):
+    users_collection = get_user_collection()
+
     if not users_collection.find_one({"user_id": user_id}):
         users_collection.insert_one(
             {
                 "user_id": user_id,
-                "first_joined": datetime.now(timezone.utc),  # First join date
-                "language": "en",
+                "first_joined": datetime.now(timezone.utc),
+                "language": language,
                 "user_rating": None,
+                "chess_username": None,
             }
         )
 
 
-# ✅ Remove user
+# ✅ Remove user from the database
 def remove_user(user_id):
-    users_collection.delete_one({"user_id": user_id})
+    get_user_collection().delete_one({"user_id": user_id})
 
 
-# ✅ Check if the user is registered
+# ✅ Check if a user is registered
 def is_user_registered(user_id):
-    return users_collection.find_one({"user_id": user_id}) is not None
+    return get_user_collection().find_one({"user_id": user_id}) is not None
 
 
-# ✅ Get the total number of users
+# ✅ Get total number of users
 def get_user_count():
-    return users_collection.count_documents({})
+    return get_user_collection().count_documents({})
 
 
+# ✅ Get user language, defaulting to "en"
 def get_user_language(user_id):
-    user_data = db.users.find_one({"user_id": user_id})
-    return user_data["language"] if user_data and "language" in user_data else "en"
+    user_data = get_user_collection().find_one(
+        {"user_id": user_id}, {"language": 1, "_id": 0}
+    )
+    return user_data.get("language", "en") if user_data else "en"
 
 
+# ✅ Update user's rating
 def update_user_rating(user_id, rating):
-    """
-    Updates the user's rating.
-    """
-    users_collection.update_one(
+    if rating is None:
+        return
+
+    get_user_collection().update_one(
         {"user_id": user_id}, {"$set": {"user_rating": rating}}, upsert=True
     )
 
 
+# ✅ Get user rating
 def get_user_rating(user_id):
-    """
-    Returns the user's rating.
-    """
-    user = users_collection.find_one({"user_id": user_id}, {"user_rating": 1, "_id": 0})
+    user = get_user_collection().find_one(
+        {"user_id": user_id}, {"user_rating": 1, "_id": 0}
+    )
     return user.get("user_rating") if user else None
 
 
+# ✅ Get top players with highest ratings
 def get_top_players(limit=10):
-    """
-    Returns the top players with the highest ratings.
-    """
-    top_players = (
-        users_collection.find(
-            {"user_rating": {"$ne": None}},  # Get users who have a rating
-            {
-                "user_id": 1,
-                "chess_username": 1,
-                "user_rating": 1,
-                "_id": 0,
-            },  # Select required fields
+    return list(
+        get_user_collection()
+        .find(
+            {"user_rating": {"$ne": None}},
+            {"user_id": 1, "chess_username": 1, "user_rating": 1, "_id": 0},
         )
-        .sort("user_rating", -1)  # Sort by rating in descending order
-        .limit(limit)  # Apply limit
+        .sort("user_rating", -1)
+        .limit(limit)
     )
 
-    return list(top_players)
 
-
+# ✅ Update user's rating using external APIs
 def update_user_rating_from_api(user_id):
-    """
-    Updates the user's rating from Chess.com or Lichess API and stores it in MongoDB.
-    """
+    users_collection = get_user_collection()
     user = users_collection.find_one({"user_id": user_id}, {"chess_username": 1})
 
     if not user or "chess_username" not in user:
-        return None  # Do nothing if the username is missing
+        return None
 
     username = user["chess_username"]
 
-    # Get user's rating from Chess.com API
-    chess_rating = get_chess_com_rating(username)
+    # Fetch rating from both APIs
+    ratings = [
+        get_chess_com_rating(username),
+        get_lichess_rating(username),
+    ]
 
-    # Get user's rating from Lichess API
-    lichess_rating = get_lichess_rating(username)
+    best_rating = max(filter(None, ratings), default=None)
 
-    # Take the highest rating
-    best_rating = max(filter(None, [chess_rating, lichess_rating]))
-
-    if best_rating:
+    if best_rating is not None:
         users_collection.update_one(
             {"user_id": user_id}, {"$set": {"user_rating": best_rating}}
         )
 
-    return best_rating  # Returns the updated rating
+    return best_rating

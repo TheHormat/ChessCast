@@ -11,6 +11,7 @@ import asyncio
 import nest_asyncio
 import os
 import random
+import logging
 from dotenv import load_dotenv
 from core.languages import MESSAGES
 from core.database import (
@@ -38,6 +39,17 @@ from api.gpt_api import get_chess_fact
 from api.unsplash_api import get_chess_image
 from core.scheduler import schedule_random_times, schedule_task
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("bot.log"), logging.StreamHandler()],
+)
+
+logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)  # `httpx` istifadə edirsənsə
+logging.getLogger("telegram").setLevel(logging.WARNING)  # Telegram SDK loqlarını gizlət
+logging.getLogger("urllib3").setLevel(logging.WARNING) 
 
 load_dotenv()
 
@@ -137,7 +149,7 @@ async def language_callback(update: Update, context: CallbackContext) -> None:
     await query.answer()
     await query.edit_message_text(confirmation_message)
 
-    print(f"✅ User {user_id} changed language to {new_lang}")
+    logger.info(f"✅ User {user_id} changed language to {new_lang}")
 
 
 # ✅ `/start` command: Registers the user and sends a static welcome message + random chess information
@@ -427,7 +439,7 @@ async def puzzle_command(update: Update, context: CallbackContext) -> None:
     """
     Sends the daily chess puzzle to the user.
     """
-    print("🔍 /puzzle command called.")
+    logger.info("🔍 /puzzle command called.")
 
     user_id = update.effective_chat.id
     user_lang = get_user_language(user_id)  # ✅ Check the user's language
@@ -435,11 +447,11 @@ async def puzzle_command(update: Update, context: CallbackContext) -> None:
     puzzle = get_lichess_daily_puzzle()
 
     if not puzzle:
-        print("⚠️ Lichess API did not respond.")
+        logger.info("⚠️ Lichess API did not respond.")
         await update.message.reply_text(MESSAGES[user_lang]["puzzle_error"])
         return
 
-    print(f"✅ Puzzle found: {puzzle['id']}")
+    logger.info(f"✅ Puzzle found: {puzzle['id']}")
 
     message = MESSAGES[user_lang]["puzzle_message"].format(
         url=puzzle["url"], rating=puzzle["rating"], plays=puzzle["plays"]
@@ -458,12 +470,12 @@ async def send_daily_puzzle():
     users = [user["user_id"] for user in users]
 
     if not users:
-        print("⚠️ No users found.")
+        logger.info("⚠️ No users found.")
         return
 
     puzzle = get_lichess_daily_puzzle()
     if not puzzle:
-        print("⚠️ Could not retrieve the daily puzzle.")
+        logger.info("⚠️ Could not retrieve the daily puzzle.")
         return
 
     message_az = MESSAGES["az"]["puzzle_message"].format(
@@ -483,9 +495,9 @@ async def send_daily_puzzle():
                 parse_mode="Markdown",
                 disable_web_page_preview=True,
             )
-            print(f"✅ Daily puzzle sent: {user_id}")
+            logger.info(f"✅ Daily puzzle sent: {user_id}")
         except Exception as e:
-            print(f"❌ Failed to send message ({user_id}): {e}")
+            logger.info(f"❌ Failed to send message ({user_id}): {e}")
 
 
 async def send_daily_chess_images():
@@ -496,7 +508,7 @@ async def send_daily_chess_images():
     users = [user["user_id"] for user in users]
 
     if not users:
-        print("⚠️ No users found.")
+        logger.info("⚠️ No users found.")
         return
 
     desktop_images = [get_chess_image("landscape") for _ in range(5)]
@@ -506,7 +518,7 @@ async def send_daily_chess_images():
 
     for image_url in all_images:
         if not image_url:
-            print("⚠️ No image found, continuing...")
+            logger.info("⚠️ No image found, continuing...")
             continue
 
         for user_id in users:
@@ -514,9 +526,9 @@ async def send_daily_chess_images():
                 user_lang = get_user_language(user_id)  # ✅ Check each user's language
                 message = MESSAGES[user_lang]["daily_chess_images"]
                 await bot.send_photo(chat_id=user_id, photo=image_url, caption=message)
-                print(f"✅ Image sent: {user_id}")
+                logger.info(f"✅ Image sent: {user_id}")
             except Exception as e:
-                print(f"❌ Failed to send message ({user_id}): {e}")
+                logger.info(f"❌ Failed to send message ({user_id}): {e}")
 
 
 # ✅ Function to send a message from GPT-4 to all users
@@ -527,7 +539,7 @@ async def send_chess_fact():
     users = [user["user_id"] for user in users]
 
     if not users:
-        print("⚠️ No users found.")
+        logger.info("⚠️ No users found.")
         return
 
     for user_id in users:
@@ -537,9 +549,9 @@ async def send_chess_fact():
 
             # ✅ Send the message
             await bot.send_message(chat_id=user_id, text=fact, parse_mode="Markdown")
-            print(f"✅ Message sent: {user_id}")
+            logger.info(f"✅ Message sent: {user_id}")
         except Exception as e:
-            print(f"❌ Failed to send message ({user_id}): {e}")
+            logger.info(f"❌ Failed to send message ({user_id}): {e}")
 
 
 # ✅ Secure messaging function for users
@@ -547,7 +559,7 @@ async def send_message(user_id, text):
     try:
         await bot.send_message(chat_id=user_id, text=text, parse_mode="Markdown")
     except Exception as e:
-        print(f"Message could not be sent: ({user_id}): {e}")
+        logger.info(f"Message could not be sent: ({user_id}): {e}")
 
 
 # ✅ Starting the bot
@@ -580,7 +592,7 @@ async def main():
     # ✅ Run the scheduler loop
     asyncio.create_task(schedule_task())
 
-    print("Bot working... 🚀")
+    logger.info("Bot working... 🚀")
     await app.run_polling()
 
 

@@ -1,4 +1,17 @@
 import requests
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler(),
+    ],
+)
+
+logger = logging.getLogger(__name__)
 
 
 # ✅ Function to retrieve user profile from Chess.com API
@@ -13,7 +26,7 @@ def get_chess_com_profile(username):
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Chess.com Profil API hatası: {e}")
+        logger.info(f"⚠️ Chess.com Profil API hatası: {e}")
         return None
 
 
@@ -29,7 +42,7 @@ def get_chess_com_stats(username):
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Chess.com Rating API hatası: {e}")
+        logger.info(f"⚠️ Chess.com Rating API hatası: {e}")
         return None
 
 

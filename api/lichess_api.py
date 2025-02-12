@@ -1,29 +1,46 @@
 import requests
 from core.languages import MESSAGES
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler(),
+    ],
+)
+
+logger = logging.getLogger(__name__)
 
 
 # ✅ Function to pull tournament data from Lichess API
 def get_lichess_tournaments():
     url = "https://lichess.org/api/tournament"
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-
-        if isinstance(data, str):
-            import json
-
-            data = json.loads(data)
-
-        if "created" not in data:
-            print("⚠️ Unexpected API Response:", data)
-            return None
-
-        return data["created"]
-
+        return _extracted_from_get_lichess_tournaments_4(url)
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Lichess API error: {e}")
+        logger.info(f"⚠️ Lichess API error: {e}")
         return None
+
+
+# TODO Rename this here and in `get_lichess_tournaments`
+def _extracted_from_get_lichess_tournaments_4(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    data = response.json()
+
+    if isinstance(data, str):
+        import json
+
+        data = json.loads(data)
+
+    if "created" not in data:
+        logger.info("⚠️ Unexpected API Response:", data)
+        return None
+
+    return data["created"]
 
 
 # ✅ The function of filtering tournaments according to the user's rating
@@ -47,9 +64,8 @@ def filter_tournaments_by_rating(tournaments, user_rating=None, user_lang="az"):
         starts_in_seconds = tournament.get("secondsToStart", 0)
         minutes_to_start = starts_in_seconds // 60
 
-        if user_rating and rating_limit is not None:
-            if user_rating > rating_limit:
-                continue
+        if user_rating and rating_limit is not None and user_rating > rating_limit:
+            continue
 
         message += f"🔹 [{name}]({link}) {MESSAGES[user_lang]['lichess_arena_starts_in'].format(minutes_to_start)}\n"
         count += 1
@@ -70,13 +86,9 @@ def get_lichess_profile(username):
         response.raise_for_status()
         data = response.json()
 
-        if "error" in data:
-            return None
-
-        return data
-
+        return None if "error" in data else data
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Lichess API error: {e}")
+        logger.info(f"⚠️ Lichess API error: {e}")
         return None
 
 
@@ -103,27 +115,31 @@ def get_lichess_daily_puzzle():
     """
     url = "https://lichess.org/api/puzzle/daily"
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-
-        data = response.json()
-
-        print(f"✅ Response from API: {data}")
-
-        puzzle_id = data.get("puzzle", {}).get("id", "None")  # Puzzle ID
-        puzzle_rating = data.get("puzzle", {}).get("rating", "None")  # Difficulty level
-        puzzle_plays = data.get("puzzle", {}).get(
-            "plays", 0
-        )  # How many times has the puzzle been played?
-        puzzle_url = f"https://lichess.org/training/{puzzle_id}"
-
-        return {
-            "id": puzzle_id,
-            "rating": puzzle_rating,
-            "plays": puzzle_plays,
-            "url": puzzle_url,
-        }
-
+        return _extracted_from_get_lichess_daily_puzzle_7(url)
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Lichess API Error: {e}")
+        logger.info(f"⚠️ Lichess API Error: {e}")
         return None
+
+
+# TODO Rename this here and in `get_lichess_daily_puzzle`
+def _extracted_from_get_lichess_daily_puzzle_7(url):
+    response = requests.get(url)
+    response.raise_for_status()
+
+    data = response.json()
+
+    logger.info(f"✅ Response from API: {data}")
+
+    puzzle_id = data.get("puzzle", {}).get("id", "None")  # Puzzle ID
+    puzzle_rating = data.get("puzzle", {}).get("rating", "None")  # Difficulty level
+    puzzle_plays = data.get("puzzle", {}).get(
+        "plays", 0
+    )  # How many times has the puzzle been played?
+    puzzle_url = f"https://lichess.org/training/{puzzle_id}"
+
+    return {
+        "id": puzzle_id,
+        "rating": puzzle_rating,
+        "plays": puzzle_plays,
+        "url": puzzle_url,
+    }

@@ -1,7 +1,19 @@
 import asyncio
 import random
 import schedule
+import logging
 from datetime import datetime, timedelta
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler(),
+    ],
+)
+
+logger = logging.getLogger(__name__)
 
 
 def get_random_times():
@@ -33,7 +45,7 @@ def schedule_random_times():
     )
 
     first_time, second_time = get_random_times()
-    print(f"📅 Random schedule set for today: {first_time}, {second_time}")
+    logger.info(f"📅 Random schedule set for today: {first_time}, {second_time}")
 
     schedule.clear()  # Remove previous schedules
 
@@ -49,15 +61,20 @@ async def schedule_task():
     """
     Runs scheduled tasks in a loop and updates the schedule at midnight.
     """
+    next_midnight = datetime.combine(
+        datetime.now().date() + timedelta(days=1), datetime.min.time()
+    )
+
     while True:
         now = datetime.now()
-        next_midnight = datetime.combine(
-            now.date() + timedelta(days=1), datetime.min.time()
-        )
 
         # Reset schedule at midnight
         if now >= next_midnight:
+            logger.info("🔄 Resetting schedule at midnight...")
             schedule_random_times()
+            next_midnight = datetime.combine(
+                now.date() + timedelta(days=1), datetime.min.time()
+            )  # New day
 
         schedule.run_pending()
         await asyncio.sleep(60)
