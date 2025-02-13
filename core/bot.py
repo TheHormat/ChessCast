@@ -409,7 +409,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(MESSAGES[user_lang]["topplayers_no_data"])
         return
 
-    message = MESSAGES[user_lang]["topplayers_header"] + "\n\n"
+    message = f"🏆 *{MESSAGES[user_lang]['topplayers_header']}*\n\n"
 
     for index, player in enumerate(top_players, start=1):
         user_id = player["user_id"]
@@ -420,13 +420,11 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         username = escape_markdown(player.get("chess_username", "Unknown"), version=2)
         rating = updated_rating or player.get("user_rating", "Unknown")
 
-        message += f"{index}\\. *{username}* \\- {rating} Elo\n"
+        message += f"{index}. *{username}* - {rating} Elo\n"
 
     logger.info(message)
 
-    await update.message.reply_text(
-        escape_markdown(message, version=2), parse_mode="MarkdownV2"
-    )
+    await update.message.reply_text(message, parse_mode="MarkdownV2")
 
 
 async def unsubscribe(update: Update, context: CallbackContext) -> None:
