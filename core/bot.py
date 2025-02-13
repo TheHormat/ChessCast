@@ -38,7 +38,6 @@ from api.lichess_api import (
 from api.gpt_api import get_chess_fact
 from api.unsplash_api import get_chess_image
 from core.scheduler import schedule_random_times, schedule_task
-from telegram.helpers import escape_markdown
 
 
 logging.basicConfig(
@@ -503,7 +502,7 @@ async def send_daily_puzzle():
 
 async def send_daily_chess_images():
     """
-    Sends 5 desktop and 5 mobile chess images to all users every day.
+    Sends 2 desktop and 3 mobile chess images to all users every day.
     """
     users = db.users.find({}, {"user_id": 1, "_id": 0})
     users = [user["user_id"] for user in users]
@@ -512,10 +511,10 @@ async def send_daily_chess_images():
         logger.info("⚠️ No users found.")
         return
 
-    desktop_images = [get_chess_image("landscape") for _ in range(5)]
-    mobile_images = [get_chess_image("portrait") for _ in range(5)]
+    desktop_images = [get_chess_image("landscape") for _ in range(2)]
+    mobile_images = [get_chess_image("portrait") for _ in range(3)]
 
-    all_images = desktop_images + mobile_images  # ✅ 10 images
+    all_images = desktop_images + mobile_images  # ✅ 5 images
 
     for image_url in all_images:
         if not image_url:
@@ -568,36 +567,43 @@ async def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     try:
-        # ✅ Define commands
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("language", set_language_command))
-        app.add_handler(CommandHandler("about", about_command))
-        app.add_handler(CommandHandler("puzzle", puzzle_command))
-        app.add_handler(CommandHandler("setrating", set_rating_command))
-        app.add_handler(CommandHandler("topplayers", topplayers_command))
-        app.add_handler(CommandHandler("lichessarena", lichess_arena_command))
-        app.add_handler(CommandHandler("lichessprofile", lichess_profile_command))
-        app.add_handler(CommandHandler("chessprofile", chess_com_profile_command))
-        app.add_handler(CommandHandler("donate", donate_command))
-        app.add_handler(CommandHandler("unsubscribe", unsubscribe))
-        app.add_handler(CallbackQueryHandler(language_callback, pattern="^set_lang_"))
-
-        # ✅ Initially schedule random hours
-        schedule_random_times()
-        schedule.every().day.at("11:00").do(
-            lambda: asyncio.create_task(send_daily_puzzle())
-        )
-        schedule.every().day.at("20:30").do(
-            lambda: asyncio.create_task(send_daily_chess_images())
-        )
-
-        asyncio.create_task(schedule_task())
+        await setup_handlers(app)
+        await setup_schedulers()
 
         logger.info("Bot working... 🚀")
         await app.run_polling(drop_pending_updates=True)
 
     finally:
         await app.shutdown()  # ✅ Ensure session is closed
+
+
+async def setup_handlers(app: Application):
+    """Sets up command and callback query handlers."""
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("language", set_language_command))
+    app.add_handler(CommandHandler("about", about_command))
+    app.add_handler(CommandHandler("puzzle", puzzle_command))
+    app.add_handler(CommandHandler("setrating", set_rating_command))
+    app.add_handler(CommandHandler("topplayers", topplayers_command))
+    app.add_handler(CommandHandler("lichessarena", lichess_arena_command))
+    app.add_handler(CommandHandler("lichessprofile", lichess_profile_command))
+    app.add_handler(CommandHandler("chessprofile", chess_com_profile_command))
+    app.add_handler(CommandHandler("donate", donate_command))
+    app.add_handler(CommandHandler("unsubscribe", unsubscribe))
+    app.add_handler(CallbackQueryHandler(language_callback, pattern="^set_lang_"))
+
+
+async def setup_schedulers():
+    """Sets up scheduled tasks."""
+    schedule_random_times()
+    schedule.every().day.at("09:00").do(
+        lambda: asyncio.create_task(send_daily_puzzle())
+    )
+    schedule.every().day.at("18:00").do(
+        lambda: asyncio.create_task(send_daily_chess_images())
+    )
+
+    asyncio.create_task(schedule_task())
 
 
 # ✅ Start Bot

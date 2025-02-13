@@ -16,6 +16,7 @@ openai = "^1.61.1"
 requests = "^2.32.3"
 pymongo = "^4.11"
 dnspython = "^2.7.0"
+pytz = "^2025.1"
 
 
 [tool.poetry.group.dev.dependencies]
