@@ -403,7 +403,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
     user_lang = get_user_language(user_id)
 
-    top_players = await get_top_players(limit=10)  
+    top_players = await get_top_players(limit=10)
 
     if not top_players:
         await update.message.reply_text(MESSAGES[user_lang]["topplayers_no_data"])
@@ -420,7 +420,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         username = escape_markdown(player.get("chess_username", "Unknown"), version=2)
         rating = updated_rating or player.get("user_rating", "Unknown")
 
-        message += f"{index}. **{username}** - {rating} Elo\n"
+        message += f"{index}\\. *{username}* \\- {rating} Elo\n"
 
     logger.info(message)
 
