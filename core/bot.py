@@ -409,7 +409,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text(MESSAGES[user_lang]["topplayers_no_data"])
         return
 
-    message = MESSAGES[user_lang]["topplayers_header"] + "\n\n"
+    message = f"<b>🏆 {MESSAGES[user_lang]['topplayers_header']}</b>\n\n"
 
     for index, player in enumerate(top_players, start=1):
         user_id = player["user_id"]
@@ -417,12 +417,12 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         # ✅ Get and update the rating from the API every time
         updated_rating = update_user_rating_from_api(user_id)
 
-        username = player.get("chess_username", "None").replace("_", "\\_")
+        username = player.get("chess_username", "Unknown")
         rating = updated_rating or player.get("user_rating", "None")
 
-        message += f"{index}. *{username}* - {rating} Elo\n"
+        message += f"{index}. <b>{username}</b> - {rating} Elo\n"
 
-    await update.message.reply_text(message, parse_mode="Markdown")
+    await update.message.reply_text(message, parse_mode="HTML")
 
 
 async def unsubscribe(update: Update, context: CallbackContext) -> None:
