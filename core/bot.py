@@ -41,6 +41,7 @@ from core.scheduler import schedule_random_times, schedule_task
 from telegram.helpers import escape_markdown
 
 
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -48,8 +49,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-logging.getLogger("httpx").setLevel(logging.WARNING)  # `httpx` istifadə edirsənsə
-logging.getLogger("telegram").setLevel(logging.WARNING)  # Telegram SDK loqlarını gizlət
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("telegram").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 load_dotenv()
@@ -403,28 +404,26 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
     user_lang = get_user_language(user_id)
 
-    top_players = await get_top_players(limit=10)
+    top_players = get_top_players(limit=10)
 
     if not top_players:
         await update.message.reply_text(MESSAGES[user_lang]["topplayers_no_data"])
         return
 
-    message = f"🏆 *{MESSAGES[user_lang]['topplayers_header']}*\n\n"
+    message = MESSAGES[user_lang]["topplayers_header"] + "\n\n"
 
     for index, player in enumerate(top_players, start=1):
         user_id = player["user_id"]
 
-        # ✅ Get and update the rating from API (ASYNC)
-        updated_rating = await update_user_rating_from_api(user_id)
+        # ✅ Get and update the rating from the API every time
+        updated_rating = update_user_rating_from_api(user_id)
 
-        username = escape_markdown(player.get("chess_username", "Unknown"), version=2)
-        rating = updated_rating or player.get("user_rating", "Unknown")
+        username = escape_markdown(player.get("chess_username", "None"), version=2)
+        rating = updated_rating or player.get("user_rating", "None")
 
         message += f"{index}. *{username}* - {rating} Elo\n"
 
-    logger.info(message)
-
-    await update.message.reply_text(message, parse_mode="MarkdownV2")
+    await update.message.reply_text(message, parse_mode="Markdown")
 
 
 async def unsubscribe(update: Update, context: CallbackContext) -> None:

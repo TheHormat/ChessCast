@@ -79,7 +79,7 @@ def get_user_rating(user_id):
 
 
 # ✅ Get top players with highest ratings
-async def get_top_players(limit=10):
+def get_top_players(limit=10):
     return list(
         get_user_collection()
         .find(
@@ -92,7 +92,7 @@ async def get_top_players(limit=10):
 
 
 # ✅ Update user's rating using external APIs
-async def update_user_rating_from_api(user_id):
+def update_user_rating_from_api(user_id):
     users_collection = get_user_collection()
     user = users_collection.find_one({"user_id": user_id}, {"chess_username": 1})
 
