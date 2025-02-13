@@ -41,7 +41,6 @@ from core.scheduler import schedule_random_times, schedule_task
 from telegram.helpers import escape_markdown
 
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -568,34 +567,37 @@ async def send_message(user_id, text):
 async def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # ✅ Define commands
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("language", set_language_command))
-    app.add_handler(CommandHandler("about", about_command))
-    app.add_handler(CommandHandler("puzzle", puzzle_command))
-    app.add_handler(CommandHandler("setrating", set_rating_command))
-    app.add_handler(CommandHandler("topplayers", topplayers_command))
-    app.add_handler(CommandHandler("lichessarena", lichess_arena_command))
-    app.add_handler(CommandHandler("lichessprofile", lichess_profile_command))
-    app.add_handler(CommandHandler("chessprofile", chess_com_profile_command))
-    app.add_handler(CommandHandler("donate", donate_command))
-    app.add_handler(CommandHandler("unsubscribe", unsubscribe))
-    app.add_handler(CallbackQueryHandler(language_callback, pattern="^set_lang_"))
+    try:
+        # ✅ Define commands
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("language", set_language_command))
+        app.add_handler(CommandHandler("about", about_command))
+        app.add_handler(CommandHandler("puzzle", puzzle_command))
+        app.add_handler(CommandHandler("setrating", set_rating_command))
+        app.add_handler(CommandHandler("topplayers", topplayers_command))
+        app.add_handler(CommandHandler("lichessarena", lichess_arena_command))
+        app.add_handler(CommandHandler("lichessprofile", lichess_profile_command))
+        app.add_handler(CommandHandler("chessprofile", chess_com_profile_command))
+        app.add_handler(CommandHandler("donate", donate_command))
+        app.add_handler(CommandHandler("unsubscribe", unsubscribe))
+        app.add_handler(CallbackQueryHandler(language_callback, pattern="^set_lang_"))
 
-    # ✅ Initially schedule random hours
-    schedule_random_times()  # Set random chess fact times
-    schedule.every().day.at("11:00").do(
-        lambda: asyncio.create_task(send_daily_puzzle())
-    )
-    schedule.every().day.at("20:30").do(
-        lambda: asyncio.create_task(send_daily_chess_images())
-    )
+        # ✅ Initially schedule random hours
+        schedule_random_times()
+        schedule.every().day.at("11:00").do(
+            lambda: asyncio.create_task(send_daily_puzzle())
+        )
+        schedule.every().day.at("20:30").do(
+            lambda: asyncio.create_task(send_daily_chess_images())
+        )
 
-    # ✅ Run the scheduler loop
-    asyncio.create_task(schedule_task())
+        asyncio.create_task(schedule_task())
 
-    logger.info("Bot working... 🚀")
-    await app.run_polling()
+        logger.info("Bot working... 🚀")
+        await app.run_polling(drop_pending_updates=True)
+
+    finally:
+        await app.shutdown()  # ✅ Ensure session is closed
 
 
 # ✅ Start Bot
