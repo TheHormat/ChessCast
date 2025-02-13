@@ -417,7 +417,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         # ✅ Get and update the rating from the API every time
         updated_rating = update_user_rating_from_api(user_id)
 
-        username = escape_markdown(player.get("chess_username", "None"), version=2)
+        username = player.get("chess_username", "None").replace("_", "\\_")
         rating = updated_rating or player.get("user_rating", "None")
 
         message += f"{index}. *{username}* - {rating} Elo\n"
