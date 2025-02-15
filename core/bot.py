@@ -571,15 +571,10 @@ async def main():
         await setup_schedulers()
 
         logger.info("Bot working... 🚀")
-        await app.run_polling(drop_pending_updates=True)  # ✅ Keeps bot running
-
-    except Exception as e:
-        logger.error(f"🔥 CRITICAL ERROR: {e}")  # ✅ Logs any errors
+        await app.run_polling(drop_pending_updates=True)
 
     finally:
-        logger.info("🔴 Bot shutting down unexpectedly. Restarting...")
-        await asyncio.sleep(5)  # Small delay before restarting
-        await main()  # ✅ Restart the bot if it crashes
+        await app.shutdown()  # ✅ Ensure session is closed
 
 
 async def setup_handlers(app: Application):
@@ -625,4 +620,6 @@ if __name__ == "__main__":
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(main())  # ✅ Keeps Railway from stopping the container
+    loop.run_until_complete(
+        main()
+    )  # ✅ Fixed: Only run main(), no duplicate setup_schedulers()
