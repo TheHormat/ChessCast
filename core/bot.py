@@ -567,14 +567,18 @@ async def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     try:
-        await setup_handlers(app)
-        await setup_schedulers()
+        await setup_handlers(app)  # ✅ Set up commands
+        await setup_schedulers()  # ✅ Start scheduler
 
         logger.info("Bot working... 🚀")
-        await app.run_polling(drop_pending_updates=True)
+        await app.run_polling(drop_pending_updates=True)  # ✅ Keeps bot running
+
+        # ✅ Ensures Railway does NOT stop the bot
+        while True:
+            await asyncio.sleep(10)
 
     finally:
-        await app.shutdown()  # ✅ Ensure session is closed
+        await app.shutdown()
 
 
 async def setup_handlers(app: Application):
@@ -620,6 +624,5 @@ if __name__ == "__main__":
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(
-        main()
-    )  # ✅ Fixed: Only run main(), no duplicate setup_schedulers()
+    loop.create_task(main())  # ✅ Run main() in the background
+    loop.run_forever()  # ✅ Keeps the loop running forever
