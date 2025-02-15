@@ -621,5 +621,5 @@ if __name__ == "__main__":
         asyncio.set_event_loop(loop)
 
     loop.run_until_complete(
-        asyncio.gather(main(), setup_schedulers())  # ✅ Start bot  # ✅ Start scheduler
-    )
+        main()
+    )  # ✅ Fixed: Only run main(), no duplicate setup_schedulers()
