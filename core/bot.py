@@ -594,8 +594,11 @@ async def setup_handlers(app: Application):
 
 
 async def setup_schedulers():
-    """Sets up scheduled tasks."""
-    schedule_random_times()
+    """Schedules daily tasks at specific times (only once)."""
+    if schedule.get_jobs():
+        logger.info("⚠️ Scheduler already initialized, skipping duplicate scheduling.")
+        return
+
     schedule.every().day.at("09:00").do(
         lambda: asyncio.create_task(send_daily_puzzle())
     )
@@ -603,7 +606,10 @@ async def setup_schedulers():
         lambda: asyncio.create_task(send_daily_chess_images())
     )
 
-    asyncio.create_task(schedule_task())
+    logger.info("✅ Scheduled daily tasks at 09:00 and 18:00")
+
+    # ✅ Wait for the schedule task instead of background task
+    await schedule_task()
 
 
 # ✅ Start Bot
@@ -614,4 +620,6 @@ if __name__ == "__main__":
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(main())
+    loop.run_until_complete(
+        asyncio.gather(main(), setup_schedulers())  # ✅ Start bot  # ✅ Start scheduler
+    )

@@ -28,25 +28,29 @@ def get_random_times():
 
 
 def schedule_random_times():
-    """
-    It clears the previous tasks and sets two new random clocks.
-    """
+    """Only clears random tasks, not daily ones."""
     from core.bot import send_chess_fact
 
-    schedule.clear()
+    schedule.clear(tag="random")  # ✅ Fix: Only remove random tasks
+
     first_time, second_time = get_random_times()
-    logger.info(f"📅 Randoms hours set: {first_time}, {second_time}")
+    logger.info(f"📅 Random hours set: {first_time}, {second_time}")
 
     schedule.every().day.at(first_time).do(
         lambda: asyncio.create_task(send_chess_fact())
-    )
+    ).tag("random")
     schedule.every().day.at(second_time).do(
         lambda: asyncio.create_task(send_chess_fact())
-    )
+    ).tag("random")
 
 
 async def schedule_task():
+    """Continuously checks for scheduled tasks and runs them."""
+
+    # ✅ Ensure random hours are scheduled at startup
+    logger.info("🕒 Initializing random hour scheduling...")
     schedule_random_times()
+
     next_midnight = datetime.combine(
         datetime.now().date() + timedelta(days=1), datetime.min.time()
     )
@@ -56,10 +60,10 @@ async def schedule_task():
 
         if now >= next_midnight:
             logger.info("🔄 At midnight the program is renewed...")
-            schedule_random_times()
+            schedule_random_times()  # ✅ Re-run only at midnight
             next_midnight = datetime.combine(
                 now.date() + timedelta(days=1), datetime.min.time()
             )
 
         schedule.run_pending()
-        await asyncio.sleep(60)
+        await asyncio.sleep(60)  # ✅ Check tasks every 60 seconds
