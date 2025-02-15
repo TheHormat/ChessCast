@@ -29,13 +29,13 @@ def get_random_times():
 
 def schedule_random_times():
     """
-    Daha önceki görevleri temizler ve yeni iki rastgele saat belirler.
+    It clears the previous tasks and sets two new random clocks.
     """
-    from core.bot import send_chess_fact  
+    from core.bot import send_chess_fact
 
     schedule.clear()
     first_time, second_time = get_random_times()
-    logger.info(f"📅 Rastgele saatler belirlendi: {first_time}, {second_time}")
+    logger.info(f"📅 Randoms hours set: {first_time}, {second_time}")
 
     schedule.every().day.at(first_time).do(
         lambda: asyncio.create_task(send_chess_fact())
@@ -55,7 +55,7 @@ async def schedule_task():
         now = datetime.now()
 
         if now >= next_midnight:
-            logger.info("🔄 Gece yarısı program yenileniyor...")
+            logger.info("🔄 At midnight the program is renewed...")
             schedule_random_times()
             next_midnight = datetime.combine(
                 now.date() + timedelta(days=1), datetime.min.time()
