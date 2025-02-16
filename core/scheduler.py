@@ -19,12 +19,23 @@ logger = logging.getLogger(__name__)
 def get_random_times():
     start_time = 8
     end_time = 20
-    times = set()
-    while len(times) < 2:
-        hour = random.randint(start_time, end_time - 1)
-        minute = random.randint(0, 59)
-        times.add(f"{hour:02d}:{minute:02d}")
-    return list(times)
+
+    # ✅ Generate first random time
+    first_hour = random.randint(start_time, end_time - 1)
+    first_minute = random.randint(0, 59)
+    first_time = f"{first_hour:02d}:{first_minute:02d}"
+
+    while True:
+        # ✅ Generate second time
+        second_hour = random.randint(start_time, end_time - 1)
+        second_minute = random.randint(0, 59)
+        second_time = f"{second_hour:02d}:{second_minute:02d}"
+
+        # ✅ Ensure at least 5 hours difference
+        if abs(second_hour - first_hour) >= 5:
+            break  # Stop looping if condition is met
+
+    return [first_time, second_time]
 
 
 def schedule_random_times():
