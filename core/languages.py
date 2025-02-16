@@ -1,5 +1,6 @@
 MESSAGES = {
     "az": {
+        "intro_gpt_message":"🍭 Gündəlik Şahmat dozamızı alaq",
         "daily_chess_images": "📷 Günün şahmat şəkilləri burada! Divar kağızı kimi istifadə et və ya dostlarınla paylaş! 🏆♟️",
         "puzzle_message": (
             "♟️ **Günün Şahmat Tapmacası**\n\n"
@@ -81,6 +82,7 @@ MESSAGES = {
         ),
     },
     "en": {
+        "intro_gpt_message":"🍭 Let's get our daily dose of Chess",
         "daily_chess_images": "📷 Chess pictures of the day are here! Use as wallpaper or share with your friends! 🏆♟️",
         "puzzle_message": (
             "♟️ **Daily Chess Puzzle**\n\n"
@@ -161,6 +163,7 @@ MESSAGES = {
         ),
     },
     "ru": {
+        "intro_gpt_message":"🍭 Давайте получим нашу ежедневную дозу шахмат",
         "daily_chess_images": "📷 Дневные шахматные изображения здесь! Используйте как обои или поделитесь с друзьями! 🏆♟️",
         "puzzle_message": (
             "♟️ **Ежедневная шахматная головоломка**\n\n"
@@ -241,6 +244,7 @@ MESSAGES = {
         ),
     },
     "tr": {
+        "intro_gpt_message":"🍭 Günlük Satranç dozumuzu alalım",
         "daily_chess_images": "📷 Günün satranç resimleri burada! Duvar kağıdı olarak kullan veya arkadaşlarınla paylaş! 🏆♟️",
         "puzzle_message": (
             "♟️ **Günün Satranç Bulmacası**\n\n"

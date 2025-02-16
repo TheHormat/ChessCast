@@ -544,10 +544,14 @@ async def send_chess_fact():
 
     for user_id in users:
         try:
-            # ✅ Get the user's language and send an appropriate request to GPT
-            fact = await get_chess_fact(user_id)
+            user_lang = get_user_language(user_id) or "en"
+            intro_message = MESSAGES[user_lang]["intro_gpt_message"]
 
-            # ✅ Send the message
+            await bot.send_message(
+                chat_id=user_id, text=intro_message, parse_mode="Markdown"
+            )
+
+            fact = await get_chess_fact(user_id)
             await bot.send_message(chat_id=user_id, text=fact, parse_mode="Markdown")
             logger.info(f"✅ Message sent: {user_id}")
         except Exception as e:
@@ -568,13 +572,13 @@ async def main():
 
     try:
         await setup_handlers(app)
-        await setup_schedulers()
+        asyncio.create_task(setup_schedulers())  # ✅ Run scheduler in background
 
-        logger.info("Bot working... 🚀")
+        logger.info("Bot working... 🚀")  # This should now print!
+
         await app.run_polling(drop_pending_updates=True)
-
     finally:
-        await app.shutdown()  # ✅ Ensure session is closed
+        await app.shutdown()
 
 
 async def setup_handlers(app: Application):
@@ -620,6 +624,4 @@ if __name__ == "__main__":
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(
-        main()
-    )  # ✅ Fixed: Only run main(), no duplicate setup_schedulers()
+    loop.run_until_complete(main())
