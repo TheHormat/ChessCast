@@ -14,7 +14,7 @@ MESSAGES = {
             "✅ Doğru istifadə:\n"
             "`/setrating StrongJunior`"
         ),
-        "topplayers_header": "🏆 Ən Yüksək Reytinqə Sahib Oyunçular",
+        "topplayers_header": "Ən Yüksək Reytinqə Sahib Oyunçular",
         "topplayers_no_data": "⚠️ Hələ heç bir istifadəçi reytinq təyin etməyib.",
         "set_rating_not_found": "❌ `{username}` adlı istifadəçi tapılmadı və ya reytinqi yoxdur.",
         "set_rating_success": "✅ `{username}` üçün reytinq uğurla təyin edildi: `{rating}`.",
@@ -96,7 +96,7 @@ MESSAGES = {
             "✅ Correct usage:\n"
             "`/setrating StrongJunior`"
         ),
-        "topplayers_header": "🏆 Top Rated Chess Players",
+        "topplayers_header": "Top Rated Chess Players",
         "topplayers_no_data": "⚠️ No users have set their rating yet.",
         "set_rating_not_found": "❌ User `{username}` not found or no rating available.",
         "set_rating_success": "✅ Rating for `{username}` has been successfully set: `{rating}`.",
@@ -177,7 +177,7 @@ MESSAGES = {
             "✅ Правильное использование:\n"
             "`/setrating StrongJunior`"
         ),
-        "topplayers_header": "🏆 Лучшие шахматисты по рейтингу",
+        "topplayers_header": "Лучшие шахматисты по рейтингу",
         "topplayers_no_data": "⚠️ Пока никто не установил свой рейтинг.",
         "set_rating_not_found": "❌ Пользователь `{username}` не найден или у него нет рейтинга.",
         "set_rating_success": "✅ Рейтинг `{username}` успешно установлен: `{rating}`.",
@@ -258,7 +258,7 @@ MESSAGES = {
             "✅ Doğru kullanım:\n"
             "`/setrating StrongJunior`"
         ),
-        "topplayers_header": "🏆 En Yüksek Reytingli Satranç Oyuncuları",
+        "topplayers_header": "En Yüksek Reytingli Satranç Oyuncuları",
         "topplayers_no_data": "⚠️ Henüz hiçbir kullanıcı reyting belirlemedi.",
         "set_rating_not_found": "❌ Kullanıcı `{username}` bulunamadı veya reyting bilgisi mevcut değil.",
         "set_rating_success": "✅ `{username}` kullanıcısının reytingi başarıyla kaydedildi: `{rating}`.",
