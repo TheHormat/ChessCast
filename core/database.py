@@ -2,7 +2,6 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import os
-
 from api.chess_com_api import get_chess_com_rating
 from api.lichess_api import get_lichess_rating
 

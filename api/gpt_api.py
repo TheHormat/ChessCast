@@ -3,6 +3,7 @@ import openai
 from core.database import get_user_language
 from core.languages import GPT_PROMPTS
 import logging
+from dotenv import load_dotenv
 
 
 logging.basicConfig(
@@ -16,7 +17,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-
+load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
@@ -33,7 +34,7 @@ async def get_chess_fact(user_id):
 
         client = openai.OpenAI()
         response = client.chat.completions.create(
-            model="gpt-4-turbo",
+            model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": prompt}],
             max_tokens=500,
         )

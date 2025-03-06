@@ -53,13 +53,8 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 load_dotenv()
 
-# ✅ Take away API Openers
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-# ✅ Define Botu
 bot = Bot(token=BOT_TOKEN)
-
-# ✅ For asynchronous functions
 nest_asyncio.apply()
 
 
