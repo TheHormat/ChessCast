@@ -1,7 +1,7 @@
 # 🛡 ChessCast Security Policy
 
 ## **🚀 Reporting Security Issues**
-If you discover a security vulnerability, please **DO NOT** disclose it publicly. Instead, report it privately to our security team via **[your-email@example.com]**. We take security issues seriously and will investigate and resolve them as quickly as possible.
+If you discover a security vulnerability, please **DO NOT** disclose it publicly. Instead, report it privately to our security team via **[thehormat@gmail.com]**. We take security issues seriously and will investigate and resolve them as quickly as possible.
 
 ### **⚡ Security Response Process:**
 1. **Report the issue** via email with a clear description and proof of concept (if applicable).
@@ -42,8 +42,8 @@ To ensure ChessCast remains secure and reliable, developers should adhere to the
 - Enforce strong password policies for users.
 
 ## **🔧 Security Updates & Contact**
-If you have any security concerns or suggestions, please contact us at **[your-email@example.com]**.
+If you have any security concerns or suggestions, please contact us at **[thehormat@gmail.com]**.
 
 We appreciate your efforts in making ChessCast a **secure and reliable** platform!
 
-**Last Updated:** February 2025
+**Last Updated:** March 2025
