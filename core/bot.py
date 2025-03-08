@@ -1,10 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Bot
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackContext,
-    CallbackQueryHandler,
-)
+from api.gpt_api import get_chess_fact
+from api.unsplash_api import get_chess_image
+from core.scheduler import schedule_task
 from core.static_facts import CHESS_FACTS
 import schedule
 import asyncio
@@ -14,6 +11,12 @@ import random
 import logging
 from dotenv import load_dotenv
 from core.languages import MESSAGES
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackContext,
+    CallbackQueryHandler,
+)
 from core.database import (
     db,
     add_user,
@@ -35,9 +38,6 @@ from api.lichess_api import (
     get_lichess_profile,
     get_lichess_rating,
 )
-from api.gpt_api import get_chess_fact
-from api.unsplash_api import get_chess_image
-from core.scheduler import schedule_random_times, schedule_task
 
 
 logging.basicConfig(

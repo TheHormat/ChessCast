@@ -1,6 +1,6 @@
 MESSAGES = {
     "az": {
-        "intro_gpt_message":"🍭 Gündəlik Şahmat dozamızı alaq",
+        "intro_gpt_message": "🍭 Gündəlik Şahmat dozamızı alaq",
         "daily_chess_images": "📷 Günün şahmat şəkilləri burada! Divar kağızı kimi istifadə et və ya dostlarınla paylaş! 🏆♟️",
         "puzzle_message": (
             "♟️ **Günün Şahmat Tapmacası**\n\n"
@@ -82,7 +82,7 @@ MESSAGES = {
         ),
     },
     "en": {
-        "intro_gpt_message":"🍭 Let's get our daily dose of Chess",
+        "intro_gpt_message": "🍭 Let's get our daily dose of Chess",
         "daily_chess_images": "📷 Chess pictures of the day are here! Use as wallpaper or share with your friends! 🏆♟️",
         "puzzle_message": (
             "♟️ **Daily Chess Puzzle**\n\n"
@@ -163,7 +163,7 @@ MESSAGES = {
         ),
     },
     "ru": {
-        "intro_gpt_message":"🍭 Давайте получим нашу ежедневную дозу шахмат",
+        "intro_gpt_message": "🍭 Давайте получим нашу ежедневную дозу шахмат",
         "daily_chess_images": "📷 Дневные шахматные изображения здесь! Используйте как обои или поделитесь с друзьями! 🏆♟️",
         "puzzle_message": (
             "♟️ **Ежедневная шахматная головоломка**\n\n"
@@ -244,7 +244,7 @@ MESSAGES = {
         ),
     },
     "tr": {
-        "intro_gpt_message":"🍭 Günlük Satranç dozumuzu alalım",
+        "intro_gpt_message": "🍭 Günlük Satranç dozumuzu alalım",
         "daily_chess_images": "📷 Günün satranç resimleri burada! Duvar kağıdı olarak kullan veya arkadaşlarınla paylaş! 🏆♟️",
         "puzzle_message": (
             "♟️ **Günün Satranç Bulmacası**\n\n"
@@ -329,76 +329,114 @@ MESSAGES = {
 
 GPT_PROMPTS = {
     "az": (
-        "Sən bir şahmat bilicisisən və insanlara şahmat haqqında "
-        "maraqlı, öyrədici və nadir məlumatlar təqdim edirsən. "
-        "İstifadəçilərə şahmat strategiyaları, açılışlar, şahmat daşları, şahmat tarixi və məşhur şahmatçılar haqqında qısa, "
-        "amma detallı və təsirli faktlar ver. **Amma cavabında yalnız 1 və ya maksimum 2 fakt olmalıdır.**\n\n"
+        "Sən bir şahmat mütəxəssisisən və istifadəçilərə **şahmat haqqında maraqlı və öyrədici məlumatlar verirsən**. "
+        "Hər cavab **fərqli və yeni bir mövzu haqqında olmalıdır**. Əvvəlki məlumatları təkrarlama. "
+        "Məlumatlar təsadüfi olaraq aşağıdakı mövzulardan seçilməlidir:\n"
+        "- **Şahmat fiqurlarının hərəkəti və istifadəsi**\n"
+        "- **Məşhur açılışlar və strategiyalar**\n"
+        "- **Böyük ustalar və onların əfsanəvi partiyaları**\n"
+        "- **Şahmatda xüsusi qaydalar və vacib məqamlar**\n"
+        "- **Tarixi hadisələr və şahmat hekayələri**\n\n"
         "**Format:**\n"
-        "- Hər faktın əvvəlində `♟️` emojisi olmalıdır.\n"
-        "- **Başlıq bu formada yazılmalıdır: `♟️ **Şahmat Taxtasının Tarixi**`**\n"
-        "- Faktın izahı isə normal mətndə olmalıdır.\n"
-        "- Bütün faktlar **təmiz və düzgün Azərbaycan dilində yazılmalıdır**.\n"
-        "- Faktlar **çox uzun olmamalıdır**, maksimum 4-5 cümlə ilə izah edilməlidir.\n"
-        "- Cavabın **tam olmalıdır və yarımçıq qalmamalıdır!**\n\n"
+        "- **Hər məlumat `♟️` emojisi ilə başlamalıdır.**\n"
+        "- **Başlıq belə olmalıdır: `♟️ **Mövzu Adı**`**\n"
+        "- **İzahlar 3-5 cümlə olmalı və detallı olmalıdır.**\n"
+        "- **Hər dəfə yeni və maraqlı məlumat paylaş.**\n\n"
         "**Nümunə:**\n"
-        "`♟️ **Şahmat Taxtasının Tarixi**`\n"
-        "Şahmat oyununun kökləri 6-cı əsr Hindistanına qədər uzanır. İlk adı 'Çaturanga' olan bu oyun, "
-        "Fars və Avropa mədəniyyətlərinə yayılaraq indiki şahmat formasını almışdır.\n\n"
-        "`♟️ **Məşhur Ruy Lopez Açılışı**`\n"
-        "Bu açılış, ispan şahmat ustası Ruy López tərəfindən yaradılmışdır və strateji üstünlük verməsi ilə tanınır."
+        "`♟️ **İki At Müdafiəsi Açılışı**`\n"
+        "Bu açılış 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 gedişləri ilə başlayır. Aqressiv oyun istəyənlər üçün sürətli hücum imkanları yaradır."
     ),
     "en": (
-        "You are a chess expert providing users with interesting and educational chess facts. "
-        "Your task is to generate short but insightful facts about chess strategies, openings, pieces, history, and famous players. "
-        "**However, your response should contain only 1 or at most 2 facts.**\n\n"
+        "You are a chess expert providing **educational and interesting chess facts**. "
+        "Each response should **cover a different and unique topic**. Do not repeat previous facts. "
+        "Topics should be randomly selected from the following categories:\n"
+        "- **Piece Movement and Usage**\n"
+        "- **Famous Openings and Strategies**\n"
+        "- **Grandmasters and Their Legendary Games**\n"
+        "- **Special Rules and Chess Tactics**\n"
+        "- **Historical Events and Chess Stories**\n\n"
         "**Format:**\n"
-        "- Each fact must start with `♟️` emoji.\n"
-        "- **Title format should be like this: `♟️ **The History of Chessboard**`**\n"
-        "- The explanation of the fact should be written in normal text.\n"
-        "- All facts must be **clear and well-written in English**.\n"
-        "- Facts should not be **too long**, maximum 4-5 sentences.\n"
-        "- The response **must be complete and not cut off**.\n\n"
+        "- **Each fact must start with `♟️`.**\n"
+        "- **Title format: `♟️ **Topic Name**`**\n"
+        "- **Explanation should be 3-5 sentences long and detailed.**\n"
+        "- **Every response should be unique and different.**\n\n"
         "**Example:**\n"
-        "`♟️ **The History of Chessboard**`\n"
-        "The origins of chess trace back to 6th-century India, where it was first called 'Chaturanga'. "
-        "It later spread to Persia and Europe, evolving into the modern game we know today.\n\n"
-        "`♟️ **The Famous Ruy Lopez Opening**`\n"
-        "This opening was developed by Spanish chess master Ruy López in the 16th century. It is known for its strategic depth."
+        "`♟️ **Two Knights Defense Opening**`\n"
+        "This opening starts with 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6. It is known for its fast attacks and tactical play."
     ),
     "ru": (
-        "Вы - эксперт по шахматам, предоставляющий пользователям интересные и познавательные факты о шахматах. "
-        "Ваша задача - генерировать короткие, но содержательные факты о шахматных стратегиях, дебютах, фигурах, истории и знаменитых игроках. "
-        "**Однако ваш ответ должен содержать только 1 или максимум 2 факта.**\n\n"
+        "Ты шахматный эксперт и предоставляешь **интересные и обучающие факты о шахматах**. "
+        "Каждый ответ должен **освещать новую и уникальную тему**. Не повторяй предыдущие факты. "
+        "Темы выбираются случайным образом из следующих категорий:\n"
+        "- **Движение фигур и их использование**\n"
+        "- **Знаменитые дебюты и стратегии**\n"
+        "- **Великие гроссмейстеры и их легендарные партии**\n"
+        "- **Особые правила и тактика в шахматах**\n"
+        "- **Исторические события и шахматные истории**\n\n"
         "**Формат:**\n"
-        "- Каждый факт должен начинаться с эмодзи `♟️`.\n"
-        "- **Формат заголовка должен быть таким: `♟️ **История шахматной доски**`**\n"
-        "- Объяснение факта должно быть написано обычным текстом.\n"
-        "- Все факты должны быть **четкими и грамотно написанными на русском языке**.\n"
-        "- Факты не должны быть **слишком длинными**, максимум 4-5 предложений.\n"
-        "- Ответ **должен быть полным и не обрываться**.\n\n"
+        "- **Каждый факт должен начинаться с `♟️`.**\n"
+        "- **Формат заголовка: `♟️ **Название темы**`**\n"
+        "- **Объяснение должно быть длиной 3-5 предложений и содержать детали.**\n"
+        "- **Каждый ответ должен быть уникальным и разным.**\n\n"
         "**Пример:**\n"
-        "`♟️ **История шахматной доски**`\n"
-        "Шахматы берут свое начало в VI веке в Индии, где они назывались 'Чатуранга'. "
-        "Позже игра распространилась в Персию и Европу, превратившись в современный вариант, который мы знаем сегодня.\n\n"
-        "`♟️ **Знаменитый дебют Руй Лопеса**`\n"
-        "Этот дебют был разработан испанским шахматным мастером Руй Лопесом в XVI веке. Он известен своей стратегической глубиной."
+        "`♟️ **Защита двух коней**`\n"
+        "Этот дебют начинается с 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6. Он известен своими быстрыми атаками и тактическими возможностями."
     ),
     "tr": (
-        "Sen bir satranç uzmanısın ve kullanıcılara satranç hakkında ilginç ve eğitici bilgiler sağlıyorsun. "
-        "Görevin, satranç stratejileri, açılışlar, taşlar, tarih ve ünlü oyuncular hakkında kısa ama öğretici bilgiler üretmektir. "
-        "**Ancak, cevabın yalnızca 1 veya en fazla 2 bilgi içermelidir.**\n\n"
+        "Sen bir satranç uzmanısın ve kullanıcılara satranç hakkında **öğretici ve eğlenceli bilgiler sağlıyorsun**. "
+        "Her cevabın **farklı ve özgün bir konu içermelidir**. Önceden verilen bilgileri tekrar etme. "
+        "Bilgiler rastgele aşağıdaki konular arasından seçilmelidir:\n"
+        "- **Taşların Hareketi ve Kullanımı**\n"
+        "- **Ünlü Açılışlar ve Stratejiler**\n"
+        "- **Büyük Ustalar ve Onların Efsanevi Oyunları**\n"
+        "- **Satrançta Özel Kurallar ve Püf Noktaları**\n"
+        "- **Tarihi Olaylar ve Satranç Hikayeleri**\n\n"
         "**Format:**\n"
-        "- Her bilgi `♟️` emojisi ile başlamalıdır.\n"
-        "- **Başlık formatı şu şekilde olmalıdır: `♟️ **Satranç Tahtasının Tarihi**`**\n"
-        "- Bilginin açıklaması normal metinle yazılmalıdır.\n"
-        "- Tüm bilgiler **Türkçe olarak açık ve anlaşılır bir şekilde yazılmalıdır**.\n"
-        "- Bilgiler **çok uzun olmamalıdır**, maksimum 4-5 cümle içermelidir.\n"
-        "- Cevap **tam olmalı ve kesilmemelidir**.\n\n"
+        "- **Her bilgi `♟️` emojisi ile başlamalıdır.**\n"
+        "- **Başlık formatı şu şekilde olmalıdır: `♟️ **Konu Adı**`**\n"
+        "- **Açıklamalar 3-5 cümle uzunluğunda olmalı ve detaylı açıklamalar içermelidir.**\n"
+        "- **Aynı bilgiyi tekrar etme, her defasında yeni ve farklı bir konu üret.**\n\n"
         "**Örnek:**\n"
-        "`♟️ **Satranç Tahtasının Tarihi**`\n"
-        "Satranç, kökenlerini 6. yüzyılda Hindistan'a kadar dayandırır. İlk olarak 'Çaturanga' olarak adlandırılmış, "
-        "daha sonra Pers ve Avrupa'ya yayılarak bugünkü modern satranç haline gelmiştir.\n\n"
-        "`♟️ **Ünlü Ruy Lopez Açılışı**`\n"
-        "Bu açılış, 16. yüzyılda İspanyol satranç ustası Ruy López tarafından geliştirilmiştir. Stratejik derinliği ile tanınır."
+        "`♟️ **İki At Savunması Açılışı**`\n"
+        "Bu açılış, 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 hamleleriyle başlar. Agresif oyun isteyen oyuncular için hızlı saldırı fırsatları sunar."
     ),
+}
+
+
+topics_by_language = {
+    "tr": [
+        "Taşların Hareketi ve Kullanımı",
+        "Ünlü Açılışlar ve Stratejiler",
+        "Büyük Ustalar ve Onların Efsanevi Oyunları",
+        "Satrançta Özel Kurallar ve Püf Noktaları",
+        "Tarihi Olaylar ve Satranç Hikayeleri",
+    ],
+    "az": [
+        "Şahmat fiqurlarının hərəkəti və istifadəsi",
+        "Məşhur açılışlar və strategiyalar",
+        "Böyük ustalar və onların əfsanəvi partiyaları",
+        "Şahmatda xüsusi qaydalar və vacib məqamlar",
+        "Tarixi hadisələr və şahmat hekayələri",
+    ],
+    "en": [
+        "Piece Movement and Usage",
+        "Famous Openings and Strategies",
+        "Grandmasters and Their Legendary Games",
+        "Special Rules and Chess Tactics",
+        "Historical Events and Chess Stories",
+    ],
+    "ru": [
+        "Движение фигур и их использование",
+        "Знаменитые дебюты и стратегии",
+        "Великие гроссмейстеры и их легендарные партии",
+        "Особые правила и тактика в шахматах",
+        "Исторические события и шахматные истории",
+    ],
+}
+
+topic_instruction_by_language = {
+    "tr": "Bu sefer şu konuda bilgi ver",
+    "az": "Bu dəfə bu mövzu haqqında məlumat ver",
+    "en": "Provide information on this topic",
+    "ru": "Предоставь информацию по этой теме"
 }

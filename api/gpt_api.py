@@ -1,9 +1,14 @@
 import os
 import openai
-from core.database import get_user_language
-from core.languages import GPT_PROMPTS
 import logging
+import random
+from core.database import get_user_language
 from dotenv import load_dotenv
+from core.languages import (
+    GPT_PROMPTS,
+    topics_by_language,
+    topic_instruction_by_language,
+)
 
 
 logging.basicConfig(
@@ -26,21 +31,36 @@ async def get_chess_fact(user_id):
     try:
         logger.info("📡 Sending a request to the GPT API...")
 
-        # ✅ Get user's language from MongoDB
         user_lang = get_user_language(user_id)
 
-        # ✅ If no language is found, English will be used as the default.
-        prompt = GPT_PROMPTS.get(user_lang, GPT_PROMPTS["en"])
+        if user_lang not in GPT_PROMPTS:
+            user_lang = "en"
+
+        prompt_template = GPT_PROMPTS[user_lang]
+
+        topics = topics_by_language.get(user_lang, topics_by_language["en"])
+        selected_topic = random.choice(topics)
+
+        topic_instruction = topic_instruction_by_language.get(
+            user_lang, topic_instruction_by_language["en"]
+        )
+
+        prompt = (
+            prompt_template
+            + f"\n{topic_instruction}: **{selected_topic}**."
+            + "\nRespond entirely in this language and do not use any other language."
+        )
 
         client = openai.OpenAI()
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": prompt}],
             max_tokens=500,
+            temperature=0.7,
         )
 
         return response.choices[0].message.content
 
     except Exception as e:
         logger.info(f"❌ GPT API Error: {e}")
-        return "⚠️ Could not connect to GPT API. Please check again later!"
+        return "⚠️ Failed to connect to GPT API, please try again later!"
