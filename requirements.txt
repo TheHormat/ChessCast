@@ -1,11 +1,12 @@
 annotated-types==0.7.0
 anyio==4.8.0
 asttokens==3.0.0
+async-timeout==5.0.1
+asyncpg==0.30.0
 certifi==2025.1.31
 charset-normalizer==3.4.1
 decorator==5.2.1
 distro==1.9.0
-dnspython==2.7.0
 exceptiongroup==1.2.2
 executing==2.2.0
 h11==0.14.0
@@ -24,12 +25,12 @@ parso==0.8.4
 pexpect==4.9.0
 pluggy==1.5.0
 prompt-toolkit==3.0.50
+psycopg2-binary==2.9.10
 ptyprocess==0.7.0
 pure-eval==0.2.3
 pydantic==2.10.6
 pydantic-core==2.27.2
 pygments==2.19.1
-pymongo==4.11.2
 pytest==8.3.5
 pytest-asyncio==0.25.3
 python-dotenv==1.0.1
