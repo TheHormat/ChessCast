@@ -5,11 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "dnspython>=2.7.0",
+    "asyncpg>=0.30.0",
     "httpx>=0.28.1",
     "nest-asyncio>=1.6.0",
     "openai>=1.65.4",
-    "pymongo>=4.11.2",
+    "psycopg2-binary>=2.9.10",
     "python-dotenv>=1.0.1",
     "python-telegram-bot>=21.11.1",
     "pytz>=2025.1",

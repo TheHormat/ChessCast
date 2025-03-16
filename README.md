@@ -84,7 +84,7 @@ If you enjoy using ChessCast, consider **supporting the project** with a coffee!
 ChessCast Bot is built using:
 - **Python & aiogram / python-telegram-bot** – Telegram API handling
 - **MongoDB** – User data storage
-- **GPT4-turbo APIs** – Send chess fact
+- **GPT4-turbo APIs** – Send chess fact ()
 - **Unsplash APIs** – Send chess images
 - **Lichess.org & Chess.com APIs** – Chess data integration
 - **Railway** – Deployment

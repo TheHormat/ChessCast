@@ -1,116 +1,146 @@
-from pymongo import MongoClient
+import asyncpg
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import os
-from api.chess_com_api import get_chess_com_rating
-from api.lichess_api import get_lichess_rating
 
-# ✅ Load environment variables
+# Load environment variables
 load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI")
+POSTGRES_URI = os.getenv("POSTGRES_URI")
 
-if not MONGO_URI:
-    raise ValueError("MONGO_URI is not set in the environment variables.")
-
-client = MongoClient(MONGO_URI)
-db = client["chesscast"]
+# Global connection pool
+db_pool = None
 
 
-def get_user_collection():
-    return db["users"]
+# ✅ Connection pool'u başlat
+async def init_db():
+    global db_pool
+    db_pool = await asyncpg.create_pool(dsn=POSTGRES_URI)
 
 
-# ✅ Add a new user to the database
-def add_user(user_id, language="en"):
-    users_collection = get_user_collection()
-
-    if not users_collection.find_one({"user_id": user_id}):
-        users_collection.insert_one(
-            {
-                "user_id": user_id,
-                "first_joined": datetime.now(timezone.utc),
-                "language": language,
-                "user_rating": None,
-                "chess_username": None,
-            }
+# ✅ Tabloyu oluştur (asenkron)
+async def create_table():
+    async with db_pool.acquire() as conn:
+        await conn.execute(
+            """
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT UNIQUE NOT NULL,
+            first_joined TIMESTAMP,
+            language VARCHAR(10),
+            user_rating INTEGER,
+            chess_username VARCHAR(100)
+        )
+        """
         )
 
 
-# ✅ Remove user from the database
-def remove_user(user_id):
-    get_user_collection().delete_one({"user_id": user_id})
-
-
-# ✅ Check if a user is registered
-def is_user_registered(user_id):
-    return get_user_collection().find_one({"user_id": user_id}) is not None
-
-
-# ✅ Get total number of users
-def get_user_count():
-    return get_user_collection().count_documents({})
-
-
-# ✅ Get user language, defaulting to "en"
-def get_user_language(user_id):
-    user_data = get_user_collection().find_one(
-        {"user_id": user_id}, {"language": 1, "_id": 0}
-    )
-    return user_data.get("language", "en") if user_data else "en"
-
-
-# ✅ Update user's rating
-def update_user_rating(user_id, rating):
-    if rating is None:
-        return
-
-    get_user_collection().update_one(
-        {"user_id": user_id}, {"$set": {"user_rating": rating}}, upsert=True
-    )
-
-
-# ✅ Get user rating
-def get_user_rating(user_id):
-    user = get_user_collection().find_one(
-        {"user_id": user_id}, {"user_rating": 1, "_id": 0}
-    )
-    return user.get("user_rating") if user else None
-
-
-# ✅ Get top players with highest ratings
-def get_top_players(limit=10):
-    return list(
-        get_user_collection()
-        .find(
-            {"user_rating": {"$ne": None}},
-            {"user_id": 1, "chess_username": 1, "user_rating": 1, "_id": 0},
-        )
-        .sort("user_rating", -1)
-        .limit(limit)
-    )
-
-
-# ✅ Update user's rating using external APIs
-def update_user_rating_from_api(user_id):
-    users_collection = get_user_collection()
-    user = users_collection.find_one({"user_id": user_id}, {"chess_username": 1})
-
-    if not user or "chess_username" not in user:
-        return None
-
-    username = user["chess_username"]
-
-    # Fetch rating from both APIs
-    ratings = [
-        get_chess_com_rating(username),
-        get_lichess_rating(username),
-    ]
-
-    best_rating = max(filter(None, ratings), default=None)
-
-    if best_rating is not None:
-        users_collection.update_one(
-            {"user_id": user_id}, {"$set": {"user_rating": best_rating}}
+# ✅ Yeni kullanıcı ekle
+async def add_user(user_id: int, language: str = "en"):
+    async with db_pool.acquire() as conn:
+        await conn.execute(
+            """
+        INSERT INTO users (user_id, first_joined, language)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id) DO NOTHING
+        """,
+            user_id,
+            datetime.now(timezone.utc),
+            language,
         )
 
-    return best_rating
+
+# ✅ Kullanıcı dilini güncelle
+async def update_user_language(user_id: int, language: str):
+    async with db_pool.acquire() as conn:
+        await conn.execute(
+            """
+        INSERT INTO users (user_id, language)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO UPDATE SET language = EXCLUDED.language
+        """,
+            user_id,
+            language,
+        )
+
+
+# ✅ Kullanıcı puanını ve ismini güncelle
+async def update_user_rating(user_id: int, rating: int, username: str):
+    async with db_pool.acquire() as conn:
+        await conn.execute(
+            """
+        INSERT INTO users (user_id, user_rating, chess_username)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id) DO UPDATE SET
+            user_rating = EXCLUDED.user_rating,
+            chess_username = EXCLUDED.chess_username
+        """,
+            user_id,
+            rating,
+            username,
+        )
+
+
+# ✅ Kullanıcıyı sil
+async def remove_user(user_id: int):
+    async with db_pool.acquire() as conn:
+        await conn.execute("DELETE FROM users WHERE user_id = $1", user_id)
+
+
+# ✅ Kullanıcı kayıtlı mı kontrol et
+async def is_user_registered(user_id: int) -> bool:
+    async with db_pool.acquire() as conn:
+        result = await conn.fetchval("SELECT 1 FROM users WHERE user_id = $1", user_id)
+        return result is not None
+
+
+# ✅ Toplam kullanıcı sayısını al
+async def get_user_count() -> int:
+    async with db_pool.acquire() as conn:
+        return await conn.fetchval("SELECT COUNT(*) FROM users")
+
+
+async def get_all_user_ids():
+    async with db_pool.acquire() as conn:
+        result = await conn.fetch("SELECT user_id FROM users")
+        return [record["user_id"] for record in result]
+
+
+# ✅ Kullanıcı dilini al
+async def get_user_language(user_id: int) -> str:
+    async with db_pool.acquire() as conn:
+        result = await conn.fetchval(
+            "SELECT language FROM users WHERE user_id = $1", user_id
+        )
+        return result or "en"
+
+
+# ✅ Kullanıcı verisini al
+async def get_user_data(user_id: int, fields=None):
+    fields_str = ", ".join(fields) if fields else "*"
+    async with db_pool.acquire() as conn:
+        result = await conn.fetchrow(
+            f"SELECT {fields_str} FROM users WHERE user_id = $1", user_id
+        )
+        return dict(result) if result else None
+
+
+# ✅ Kullanıcı puanını al
+async def get_user_rating(user_id: int):
+    async with db_pool.acquire() as conn:
+        return await conn.fetchval(
+            "SELECT user_rating FROM users WHERE user_id = $1", user_id
+        )
+
+
+# ✅ En iyi oyuncuları al
+async def get_top_players(limit=10):
+    async with db_pool.acquire() as conn:
+        return await conn.fetch(
+            """
+        SELECT user_id, chess_username, user_rating FROM users
+        WHERE user_rating IS NOT NULL
+        ORDER BY user_rating DESC
+        LIMIT $1
+        """,
+            limit,
+        )

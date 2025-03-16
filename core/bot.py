@@ -17,20 +17,25 @@ from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
 )
+
 from core.database import (
-    db,
     add_user,
+    get_all_user_ids,
+    update_user_language,
     get_top_players,
     get_user_language,
     is_user_registered,
     remove_user,
-    update_user_rating_from_api,
+    get_user_data,
+    update_user_rating,
 )
+
 from api.chess_com_api import (
     get_chess_com_profile,
     get_chess_com_rating,
     get_chess_com_stats,
 )
+
 from api.lichess_api import (
     filter_tournaments_by_rating,
     get_lichess_daily_puzzle,
@@ -56,17 +61,6 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=BOT_TOKEN)
 nest_asyncio.apply()
-
-
-def get_user_data(user_id, fields=None):
-    """
-    Retrieves user data from the database.
-    :param user_id: Telegram user ID
-    :param fields: List of fields to retrieve, default is None (all fields)
-    :return: Dictionary with user data or None if user does not exist
-    """
-    query_fields = {field: 1 for field in fields} if fields else {}
-    return db.users.find_one({"user_id": user_id}, query_fields)
 
 
 def get_message(user_id, key):
@@ -133,10 +127,8 @@ async def language_callback(update: Update, context: CallbackContext) -> None:
     if not new_lang:
         return
 
-    # Update the user's language preference in the database
-    db.users.update_one(
-        {"user_id": user_id}, {"$set": {"language": new_lang}}, upsert=True
-    )
+    # ✅ PostgreSQL veritabanında kullanıcı dilini güncelle
+    await update_user_language(user_id, new_lang)
 
     # Confirm language change in the selected language
     confirmation_message = MESSAGES[new_lang]["language_set"]
@@ -355,7 +347,7 @@ async def donate_command(update: Update, context: CallbackContext) -> None:
 
 async def set_rating_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)  # We get the user's language.
+    user_lang = await get_user_language(user_id)  # Asenkron hale getirildi.
 
     if not context.args:
         await update.message.reply_text(
@@ -365,9 +357,9 @@ async def set_rating_command(update: Update, context: CallbackContext) -> None:
 
     username = context.args[0]
 
-    # ✅ Let's get the rating from Lichess and Chess.com
-    lichess_rating = get_lichess_rating(username)
-    chesscom_rating = get_chess_com_rating(username)
+    # ✅ Asenkron olarak API'den rating verilerini al
+    lichess_rating = await get_lichess_rating(username)
+    chesscom_rating = await get_chess_com_rating(username)
 
     if lichess_rating is None and chesscom_rating is None:
         await update.message.reply_text(
@@ -376,14 +368,11 @@ async def set_rating_command(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    # ✅ Note which platform has the highest rating.
+    # ✅ En yüksek ratingi belirle
     max_rating = max(filter(None, [lichess_rating, chesscom_rating]))
 
-    db.users.update_one(
-        {"user_id": user_id},
-        {"$set": {"user_rating": max_rating, "chess_username": username}},
-        upsert=True,
-    )
+    # ✅ Veritabanında rating ve username bilgisini güncelle
+    await update_user_rating(user_id, max_rating, username)
 
     await update.message.reply_text(
         MESSAGES[user_lang]["set_rating_success"].format(
@@ -409,7 +398,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
         user_id = player["user_id"]
 
         # ✅ Get and update the rating from the API every time
-        updated_rating = update_user_rating_from_api(user_id)
+        updated_rating = update_user_rating(user_id)
 
         username = player.get("chess_username", "Unknown")
         rating = updated_rating or player.get("user_rating", "None")
@@ -461,8 +450,7 @@ async def send_daily_puzzle():
     """
     Sends the daily puzzle to all users every day.
     """
-    users = db.users.find({}, {"user_id": 1, "_id": 0})
-    users = [user["user_id"] for user in users]
+    users = await get_all_user_ids()
 
     if not users:
         logger.info("⚠️ No users found.")
@@ -473,6 +461,7 @@ async def send_daily_puzzle():
         logger.info("⚠️ Could not retrieve the daily puzzle.")
         return
 
+    # Mesajları hazırla
     message_az = MESSAGES["az"]["puzzle_message"].format(
         url=puzzle["url"], rating=puzzle["rating"], plays=puzzle["plays"]
     )
@@ -480,9 +469,10 @@ async def send_daily_puzzle():
         url=puzzle["url"], rating=puzzle["rating"], plays=puzzle["plays"]
     )
 
+    # Mesajları kullanıcıların diline göre gönder
     for user_id in users:
         try:
-            user_lang = get_user_language(user_id)  # ✅ Check each user's language
+            user_lang = await get_user_language(user_id)
             message = message_az if user_lang == "az" else message_en
             await bot.send_message(
                 chat_id=user_id,
@@ -499,13 +489,13 @@ async def send_daily_chess_images():
     """
     Sends 2 desktop and 3 mobile chess images to all users every day.
     """
-    users = db.users.find({}, {"user_id": 1, "_id": 0})
-    users = [user["user_id"] for user in users]
+    users = await get_all_user_ids()
 
     if not users:
         logger.info("⚠️ No users found.")
         return
 
+    # Görselleri hazırla
     desktop_images = [get_chess_image("landscape") for _ in range(2)]
     mobile_images = [get_chess_image("portrait") for _ in range(3)]
 
@@ -518,7 +508,7 @@ async def send_daily_chess_images():
 
         for user_id in users:
             try:
-                user_lang = get_user_language(user_id)  # ✅ Check each user's language
+                user_lang = await get_user_language(user_id)
                 message = MESSAGES[user_lang]["daily_chess_images"]
                 await bot.send_photo(chat_id=user_id, photo=image_url, caption=message)
                 logger.info(f"✅ Image sent: {user_id}")
@@ -528,10 +518,10 @@ async def send_daily_chess_images():
 
 # ✅ Function to send a message from GPT-4 to all users
 async def send_chess_fact():
-    users = db.users.find(
-        {}, {"user_id": 1, "_id": 0}
-    )  # Retrieve all users from MongoDB
-    users = [user["user_id"] for user in users]
+    """
+    Sends a chess fact to all users.
+    """
+    users = await get_all_user_ids()
 
     if not users:
         logger.info("⚠️ No users found.")
@@ -539,16 +529,18 @@ async def send_chess_fact():
 
     for user_id in users:
         try:
-            user_lang = get_user_language(user_id) or "en"
+            user_lang = await get_user_language(user_id)
             intro_message = MESSAGES[user_lang]["intro_gpt_message"]
 
+            # Ön mesajı gönder
             await bot.send_message(
                 chat_id=user_id, text=intro_message, parse_mode="Markdown"
             )
 
+            # Satranç bilgisini al ve gönder
             fact = await get_chess_fact(user_id)
             await bot.send_message(chat_id=user_id, text=fact, parse_mode="Markdown")
-            logger.info(f"✅ Message sent: {user_id}")
+            logger.info(f"✅ Chess fact sent: {user_id}")
         except Exception as e:
             logger.info(f"❌ Failed to send message ({user_id}): {e}")
 
