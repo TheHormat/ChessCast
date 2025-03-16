@@ -387,7 +387,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
     user_lang = await get_user_language(user_id)
 
-    top_players = get_top_players(limit=10)
+    top_players = await get_top_players(limit=10)
 
     if not top_players:
         await update.message.reply_text(MESSAGES[user_lang]["topplayers_no_data"])
@@ -398,8 +398,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
     for index, player in enumerate(top_players, start=1):
         user_id = player["user_id"]
 
-        # ✅ Get and update the rating from the API every time
-        updated_rating = update_user_rating(user_id)
+        updated_rating = await update_user_rating(user_id)
 
         username = player.get("chess_username", "Unknown")
         rating = updated_rating or player.get("user_rating", "None")
