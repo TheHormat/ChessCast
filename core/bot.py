@@ -20,7 +20,6 @@ from telegram.ext import (
 
 from core.database import (
     add_user,
-    create_table,
     get_all_user_ids,
     init_db,
     update_user_language,
@@ -148,7 +147,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
     # ✅ If the user is logging in for the first time, register and send static facts
     if not await is_user_registered(user_id):
-        add_user(user_id)
+        await add_user(user_id)
         await update.message.reply_text(MESSAGES[user_lang]["start_welcome"])
 
         # ✅ Send random information from CHESS_FACTS for new user
@@ -415,7 +414,7 @@ async def unsubscribe(update: Update, context: CallbackContext) -> None:
     user_lang = await get_user_language(user_id)
 
     if await is_user_registered(user_id):
-        remove_user(user_id)
+        await remove_user(user_id)
         await update.message.reply_text(MESSAGES[user_lang]["unsubscribe_success"])
     else:
         await update.message.reply_text(MESSAGES[user_lang]["unsubscribe_already"])
