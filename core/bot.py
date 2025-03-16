@@ -63,8 +63,8 @@ bot = Bot(token=BOT_TOKEN)
 nest_asyncio.apply()
 
 
-def get_message(user_id, key):
-    user_lang = get_user_language(user_id)
+async def get_message(user_id, key):
+    user_lang = await get_user_language(user_id)
     return MESSAGES.get(user_lang, MESSAGES["en"]).get(key, "Message not found")
 
 
@@ -142,7 +142,7 @@ async def language_callback(update: Update, context: CallbackContext) -> None:
 # ✅ `/start` command: Registers the user and sends a static welcome message + random chess information
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     # ✅ If the user is logging in for the first time, register and send static facts
     if not is_user_registered(user_id):
@@ -159,7 +159,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def about_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     about_text = MESSAGES[user_lang]["about"]
 
@@ -170,7 +170,7 @@ async def about_command(update: Update, context: CallbackContext) -> None:
 
 async def lichess_arena_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     user_input = context.args
 
@@ -197,7 +197,7 @@ async def lichess_arena_command(update: Update, context: CallbackContext) -> Non
 
 async def lichess_profile_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     if not context.args:
         await update.message.reply_text(
@@ -259,7 +259,7 @@ async def lichess_profile_command(update: Update, context: CallbackContext) -> N
 # Chess.com
 async def chess_com_profile_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     if not context.args:
         await update.message.reply_text(
@@ -336,7 +336,7 @@ async def chess_com_profile_command(update: Update, context: CallbackContext) ->
 
 async def donate_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     await update.message.reply_text(
         MESSAGES[user_lang]["donate_message"],
@@ -347,7 +347,7 @@ async def donate_command(update: Update, context: CallbackContext) -> None:
 
 async def set_rating_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = await get_user_language(user_id)  # Asenkron hale getirildi.
+    user_lang = await get_user_language(user_id)
 
     if not context.args:
         await update.message.reply_text(
@@ -384,7 +384,7 @@ async def set_rating_command(update: Update, context: CallbackContext) -> None:
 
 async def topplayers_command(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     top_players = get_top_players(limit=10)
 
@@ -410,7 +410,7 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
 
 async def unsubscribe(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)
+    user_lang = await get_user_language(user_id)
 
     if is_user_registered(user_id):
         remove_user(user_id)
@@ -426,7 +426,7 @@ async def puzzle_command(update: Update, context: CallbackContext) -> None:
     logger.info("🔍 /puzzle command called.")
 
     user_id = update.effective_chat.id
-    user_lang = get_user_language(user_id)  # ✅ Check the user's language
+    user_lang = await get_user_language(user_id)
 
     puzzle = get_lichess_daily_puzzle()
 
