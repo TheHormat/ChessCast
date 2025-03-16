@@ -358,7 +358,6 @@ async def set_rating_command(update: Update, context: CallbackContext) -> None:
 
     username = context.args[0]
 
-    # ✅ Asenkron olarak API'den rating verilerini al
     lichess_rating = await get_lichess_rating(username)
     chesscom_rating = await get_chess_com_rating(username)
 
@@ -369,10 +368,8 @@ async def set_rating_command(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    # ✅ En yüksek ratingi belirle
     max_rating = max(filter(None, [lichess_rating, chesscom_rating]))
 
-    # ✅ Veritabanında rating ve username bilgisini güncelle
     await update_user_rating(user_id, max_rating, username)
 
     await update.message.reply_text(

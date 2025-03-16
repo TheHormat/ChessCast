@@ -101,7 +101,6 @@ async def get_lichess_rating(username):
             response.raise_for_status()
             data = response.json()
 
-        # En yüksek Blitz ve Bullet rating'ini al
         blitz_rating = data.get("perfs", {}).get("blitz", {}).get("rating", None)
         bullet_rating = data.get("perfs", {}).get("bullet", {}).get("rating", None)
 
