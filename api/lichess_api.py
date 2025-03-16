@@ -1,5 +1,6 @@
 import requests
 from core.languages import MESSAGES
+import httpx
 import logging
 
 
@@ -92,20 +93,21 @@ def get_lichess_profile(username):
         return None
 
 
-def get_lichess_rating(username):
+async def get_lichess_rating(username):
     url = f"https://lichess.org/api/user/{username}"
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
 
-        # We take the highest rating (Blitz and Bullet)
+        # En yüksek Blitz ve Bullet rating'ini al
         blitz_rating = data.get("perfs", {}).get("blitz", {}).get("rating", None)
         bullet_rating = data.get("perfs", {}).get("bullet", {}).get("rating", None)
 
         return max(filter(None, [blitz_rating, bullet_rating]))
 
-    except requests.exceptions.RequestException:
+    except httpx.RequestError:
         return None
 
 
