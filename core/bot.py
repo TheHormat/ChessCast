@@ -74,7 +74,7 @@ async def set_language_command(update: Update, context: CallbackContext) -> None
     Sends an inline keyboard to the user to select a language.
     """
     user_id = update.effective_chat.id
-    user_data = get_user_data(user_id, ["language"])
+    user_data = await get_user_data(user_id, ["language"])
     user_lang = user_data.get("language", "en")
 
     keyboard = [
