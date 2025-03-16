@@ -147,7 +147,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     user_lang = await get_user_language(user_id)
 
     # ✅ If the user is logging in for the first time, register and send static facts
-    if not is_user_registered(user_id):
+    if not await is_user_registered(user_id):
         add_user(user_id)
         await update.message.reply_text(MESSAGES[user_lang]["start_welcome"])
 
@@ -414,7 +414,7 @@ async def unsubscribe(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_chat.id
     user_lang = await get_user_language(user_id)
 
-    if is_user_registered(user_id):
+    if await is_user_registered(user_id):
         remove_user(user_id)
         await update.message.reply_text(MESSAGES[user_lang]["unsubscribe_success"])
     else:
@@ -558,7 +558,6 @@ async def send_message(user_id, text):
 # ✅ Starting the bot
 async def main():
     await init_db()
-    await create_table()
 
     app = Application.builder().token(BOT_TOKEN).build()
 

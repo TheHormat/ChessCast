@@ -11,13 +11,11 @@ POSTGRES_URI = os.getenv("POSTGRES_URI")
 db_pool = None
 
 
-# ✅ Connection pool'u başlat
 async def init_db():
     global db_pool
     db_pool = await asyncpg.create_pool(dsn=POSTGRES_URI)
 
 
-# ✅ Tabloyu oluştur (asenkron)
 async def create_table():
     async with db_pool.acquire() as conn:
         await conn.execute(
@@ -34,7 +32,6 @@ async def create_table():
         )
 
 
-# ✅ Yeni kullanıcı ekle
 async def add_user(user_id: int, language: str = "en"):
     async with db_pool.acquire() as conn:
         await conn.execute(
@@ -49,7 +46,6 @@ async def add_user(user_id: int, language: str = "en"):
         )
 
 
-# ✅ Kullanıcı dilini güncelle
 async def update_user_language(user_id: int, language: str):
     async with db_pool.acquire() as conn:
         await conn.execute(
@@ -63,7 +59,6 @@ async def update_user_language(user_id: int, language: str):
         )
 
 
-# ✅ Kullanıcı puanını ve ismini güncelle
 async def update_user_rating(user_id: int, rating: int, username: str):
     async with db_pool.acquire() as conn:
         await conn.execute(
@@ -80,20 +75,17 @@ async def update_user_rating(user_id: int, rating: int, username: str):
         )
 
 
-# ✅ Kullanıcıyı sil
 async def remove_user(user_id: int):
     async with db_pool.acquire() as conn:
         await conn.execute("DELETE FROM users WHERE user_id = $1", user_id)
 
 
-# ✅ Kullanıcı kayıtlı mı kontrol et
 async def is_user_registered(user_id: int) -> bool:
     async with db_pool.acquire() as conn:
         result = await conn.fetchval("SELECT 1 FROM users WHERE user_id = $1", user_id)
         return result is not None
 
 
-# ✅ Toplam kullanıcı sayısını al
 async def get_user_count() -> int:
     async with db_pool.acquire() as conn:
         return await conn.fetchval("SELECT COUNT(*) FROM users")
@@ -105,7 +97,6 @@ async def get_all_user_ids():
         return [record["user_id"] for record in result]
 
 
-# ✅ Kullanıcı dilini al
 async def get_user_language(user_id: int) -> str:
     async with db_pool.acquire() as conn:
         result = await conn.fetchval(
@@ -114,7 +105,6 @@ async def get_user_language(user_id: int) -> str:
         return result or "en"
 
 
-# ✅ Kullanıcı verisini al
 async def get_user_data(user_id: int, fields=None):
     fields_str = ", ".join(fields) if fields else "*"
     async with db_pool.acquire() as conn:
@@ -124,7 +114,6 @@ async def get_user_data(user_id: int, fields=None):
         return dict(result) if result else None
 
 
-# ✅ Kullanıcı puanını al
 async def get_user_rating(user_id: int):
     async with db_pool.acquire() as conn:
         return await conn.fetchval(
@@ -132,7 +121,6 @@ async def get_user_rating(user_id: int):
         )
 
 
-# ✅ En iyi oyuncuları al
 async def get_top_players(limit=10):
     async with db_pool.acquire() as conn:
         return await conn.fetch(
