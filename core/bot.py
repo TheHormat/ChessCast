@@ -20,7 +20,9 @@ from telegram.ext import (
 
 from core.database import (
     add_user,
+    create_table,
     get_all_user_ids,
+    init_db,
     update_user_language,
     get_top_players,
     get_user_language,
@@ -555,6 +557,9 @@ async def send_message(user_id, text):
 
 # ✅ Starting the bot
 async def main():
+    await init_db()
+    await create_table()
+
     app = Application.builder().token(BOT_TOKEN).build()
 
     try:
