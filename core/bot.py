@@ -397,13 +397,21 @@ async def topplayers_command(update: Update, context: CallbackContext) -> None:
 
     for index, player in enumerate(top_players, start=1):
         user_id = player["user_id"]
-
-        updated_rating = await update_user_rating(user_id)
-
         username = player.get("chess_username", "Unknown")
-        rating = updated_rating or player.get("user_rating", "None")
 
-        message += f"{index}. <b>{username}</b> - {rating} Elo\n"
+        # ✅ Kullanıcının en güncel ratingini API'den çek
+        lichess_rating = await get_lichess_rating(username)
+        chesscom_rating = await get_chess_com_rating(username)
+        updated_rating = max(filter(None, [lichess_rating, chesscom_rating]))
+
+        # ✅ Rating bulunamazsa, mevcut ratingi kullan
+        final_rating = updated_rating or player.get("user_rating", "None")
+
+        # ✅ Rating veritabanına güncelle
+        if updated_rating:
+            await update_user_rating(user_id, updated_rating, username)
+
+        message += f"{index}. <b>{username}</b> - {final_rating} Elo\n"
 
     await update.message.reply_text(message, parse_mode="HTML")
 
