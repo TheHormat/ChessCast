@@ -361,6 +361,9 @@ async def set_rating_command(update: Update, context: CallbackContext) -> None:
     lichess_rating = await get_lichess_rating(username)
     chesscom_rating = await get_chess_com_rating(username)
 
+    print(f"Lichess Rating for {username}: {lichess_rating}")
+    print(f"Chess.com Rating for {username}: {chesscom_rating}")
+
     if lichess_rating is None and chesscom_rating is None:
         await update.message.reply_text(
             MESSAGES[user_lang]["set_rating_not_found"].format(username=username),

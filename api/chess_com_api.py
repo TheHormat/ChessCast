@@ -1,5 +1,6 @@
 import requests
 import logging
+import httpx
 
 
 logging.basicConfig(
@@ -46,20 +47,22 @@ def get_chess_com_stats(username):
         return None
 
 
-def get_chess_com_rating(username):
+async def get_chess_com_rating(username):
     url = f"https://api.chess.com/pub/player/{username}/stats"
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
 
-        # We take the highest rating (Blitz and Bullet)
         blitz_rating = data.get("chess_blitz", {}).get("last", {}).get("rating", None)
         bullet_rating = data.get("chess_bullet", {}).get("last", {}).get("rating", None)
 
-        return max(
-            filter(None, [blitz_rating, bullet_rating])
-        )  # We return at the highest price
+        return max(filter(None, [blitz_rating, bullet_rating]))
 
-    except requests.exceptions.RequestException:
+    except httpx.RequestError as e:
+        print(f"Chess.com API request error: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error in Chess.com rating: {e}")
         return None
