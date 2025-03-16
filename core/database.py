@@ -36,9 +36,9 @@ async def add_user(user_id: int, language: str = "en"):
     async with db_pool.acquire() as conn:
         await conn.execute(
             """
-        INSERT INTO users (user_id, first_joined, language)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (user_id) DO NOTHING
+            INSERT INTO users (user_id, first_joined, language)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id) DO NOTHING
         """,
             user_id,
             datetime.now(timezone.utc),
