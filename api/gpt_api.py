@@ -30,10 +30,9 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 async def get_chess_fact(user_id):
     try:
         logger.info("📡 Sending a request to the GPT API...")
+        user_lang = await get_user_language(user_id)
 
-        user_lang = get_user_language(user_id)
-
-        if user_lang not in GPT_PROMPTS:
+        if not user_lang or user_lang not in GPT_PROMPTS:
             user_lang = "en"
 
         prompt_template = GPT_PROMPTS[user_lang]
@@ -51,7 +50,6 @@ async def get_chess_fact(user_id):
             + "\nRespond entirely in this language and do not use any other language."
         )
 
-        client = openai.OpenAI()
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": prompt}],
