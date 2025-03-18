@@ -60,7 +60,7 @@ MESSAGES = {
         "lichess_arena_no_data": "⚠️ Lichess.org arena datası alına bilmədi.",
         "language_set": "✅ Dil Azərbaycan dili olaraq təyin edildi!",
         "about": (
-            "👋 *Salam!* Mən `ChessCast` botuyam, sənin şəxsi şahmat köməkçin. ♟️\n\n"
+            "👋♟️ *Salam!* Mən `ChessCast` botuyam, sənin şəxsi şahmat köməkçin.\n\n"
             "Mən sənə *gündəlik şahmat faktları*, *tapmacalar*, *real vaxtda turnir yeniləmələri* və "
             "*şahmatla bağlı maraqlı şəkillər* təqdim edirəm. "
             "**Lichess.org** və **Chess.com** üzərindən oyunçu profillərini və reytinqlərini yoxlaya bilərsən! 🎯\n\n"
@@ -142,7 +142,7 @@ MESSAGES = {
         "lichess_arena_no_data": "⚠️ Could not retrieve Lichess.org arena data.",
         "language_set": "✅ Language set to English!",
         "about": (
-            "👋 Hi! I'm the *ChessCast* bot, your personal chess assistant. ♟️\n\n"
+            "👋♟️ Hi! I'm the *ChessCast* bot, your personal chess assistant.\n\n"
             "I bring you **daily chess facts**, **puzzles**, **real-time tournament updates** and **interesting pictures about chess** "
             "from *Lichess.org* and *Chess.com*. Want to check your chess stats? Just type your username and get instant ratings & game history! 🎯\n\n"
             "📌 **What can I do?**\n\n"
@@ -223,7 +223,7 @@ MESSAGES = {
         "lichess_arena_no_data": "⚠️ Не удалось получить данные арены Lichess.org.",
         "language_set": "✅ Язык изменен на русский!",
         "about": (
-            "👋 Привет! Я *ChessCast* бот, твой личный шахматный помощник. ♟️\n\n"
+            "👋♟️ Привет! Я *ChessCast* бот, твой личный шахматный помощник.\n\n"
             "Я предлагаю **ежедневные шахматные факты**, **головоломки**, **обновления турниров в реальном времени** и **интересные шахматные изображения** "
             "из *Lichess.org* и *Chess.com*. Хочешь узнать свой шахматный рейтинг? Просто введи свое имя пользователя и получи мгновенную статистику! 🎯\n\n"
             "📌 **Что я умею?**\n\n"
@@ -304,7 +304,7 @@ MESSAGES = {
         "lichess_arena_no_data": "⚠️ Lichess.org turnuva bilgileri alınamadı.",
         "language_set": "✅ Dil Türkçe olarak ayarlandı!",
         "about": (
-            "👋 Merhaba! Ben *ChessCast* botuyum, kişisel satranç asistanın! ♟️\n\n"
+            "👋♟️ Merhaba! Ben *ChessCast* botuyum, kişisel satranç asistanın!\n\n"
             "Sana **günlük satranç bilgileri**, **bulmacalar**, **canlı turnuva güncellemeleri** ve **ilginç satranç resimleri** getiriyorum. "
             "*Lichess.org* ve *Chess.com* veritabanlarını kullanarak anlık oyuncu reytingleri ve oyun geçmişlerini görüntüleyebilirsin! 🎯\n\n"
             "📌 **Ben neler yapabilirim?**\n\n"
